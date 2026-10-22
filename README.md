@@ -21,7 +21,7 @@ Alert ──> Triage & Log Agent ──> Orchestrator ──> Remediation Agent 
 ```
 
 1. **Triage & Log Agent.** Reads metrics, logs and traces, and returns a Root-Cause Report with up to 3 ranked hypotheses. Each hypothesis quotes real evidence with a reference id. It cannot change anything.
-2. **Orchestrator** (plain code). Validates the report and sets its status: `ok`, `uncertain`, `insufficient_evidence` or `failed`. The agents never talk to each other directly.
+2. **Orchestrator** (plain code). Validates the report structure, incident consistency, and evidence quotes. It removes unsupported hypotheses and sets status to `ok` for one supported hypothesis, `uncertain` for multiple, `insufficient_evidence` for none, or `failed` for incident inconsistencies. The agents never talk to each other directly.
 3. **Remediation Agent.** Matches the top hypothesis to a team runbook, checks every proposed action against company policy, and submits a plan to the approval queue. It never sees raw logs and cannot run actions.
 4. **Human approval.** An engineer approves, edits or rejects the plan on the approval screen.
 5. **Executor** (plain code). Runs only allow-listed, reversible actions on one service, then checks that the service actually recovered.
@@ -33,6 +33,21 @@ Alert ──> Triage & Log Agent ──> Orchestrator ──> Remediation Agent 
 - Log and trace content is treated as data, never as instructions. Prompt injection inside logs is one of the test cases.
 - An uncertain or incomplete diagnosis is labeled as such, never guessed.
 - A plan that is out of date (a newer plan exists for the incident, or the metrics no longer match) is marked stale and must be approved again.
+
+## API contract
+
+The approval UI uses these JSON endpoints:
+
+| Method | Path | Request | Response |
+| --- | --- | --- | --- |
+| `POST` | `/api/incidents` | `IncidentPacket` | Validated `RootCauseReport` and an optional `RemediationPlan` |
+| `GET` | `/api/approvals` | — | Approval-queue list of `RemediationPlan` objects |
+| `GET` | `/api/approvals/{plan_id}` | — | One `RemediationPlan` |
+| `POST` | `/api/approvals/{plan_id}/approve` | — | Updated plan with status `approved` |
+| `POST` | `/api/approvals/{plan_id}/reject` | `{"reason": "..."}` | Updated plan with status `rejected` |
+
+Approving a plan records human approval; it does not execute the plan in the
+approval request. Endpoint implementation is scheduled with the API work.
 
 ## Agent tools
 

@@ -201,7 +201,7 @@ class RootCauseReport(Strict):
     window: TimeWindow
     affected_services: list[str] = Field(min_length=1)
     timeline: list[TimelineEvent] = []
-    hypotheses: list[Hypothesis] = Field(min_length=1, max_length=3)
+    hypotheses: list[Hypothesis] = Field(max_length=3)
     unknowns: list[str] = []
     status: DiagnosisStatus | None = None
     validation_notes: list[str] = []  # e.g. "H2 removed: evidence not found"
@@ -217,6 +217,12 @@ class RootCauseReport(Strict):
         if confidences != sorted(confidences, reverse=True):
             raise ValueError("hypotheses must be sorted by confidence, highest first")
         return hypotheses
+
+    @model_validator(mode="after")
+    def require_hypothesis_unless_insufficient(self) -> RootCauseReport:
+        if not self.hypotheses and self.status is not DiagnosisStatus.INSUFFICIENT_EVIDENCE:
+            raise ValueError("a report without hypotheses must be insufficient_evidence")
+        return self
 
 
 # ---------------------------------------------------------------------------
