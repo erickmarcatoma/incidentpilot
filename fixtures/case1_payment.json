@@ -1,0 +1,85 @@
+{
+  "incident_id": "inc-payment-001",
+  "alert": {
+    "name": "CheckoutErrorRateHigh",
+    "service": "checkout",
+    "fired_at": "2026-10-22T13:58:00Z",
+    "description": "Checkout errors exceeded the 20% alert threshold."
+  },
+  "window": {
+    "start": "2026-10-22T13:45:00Z",
+    "end": "2026-10-22T14:00:00Z"
+  },
+  "services": ["checkout", "payment"],
+  "metrics": [
+    {
+      "ref": "metric:checkout:error_rate",
+      "metric": "checkout_error_rate",
+      "service": "checkout",
+      "baseline": 0.01,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 0.01},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 0.02},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 0.23},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 0.27}
+      ]
+    },
+    {
+      "ref": "metric:payment:error_rate",
+      "metric": "payment_error_rate",
+      "service": "payment",
+      "baseline": 0.005,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 0.004},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 0.006},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 0.24},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 0.29}
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "ref": "log:payment-001",
+      "timestamp": "2026-10-22T13:54:12Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "payment authorization failed: invalid token from paymentFailure flag"
+    },
+    {
+      "ref": "log:checkout-001",
+      "timestamp": "2026-10-22T13:55:01Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "checkout request failed after payment authorization returned 401"
+    },
+    {
+      "ref": "log:payment-002",
+      "timestamp": "2026-10-22T13:56:20Z",
+      "service": "payment",
+      "severity": "warning",
+      "message": "paymentFailure feature flag enabled"
+    }
+  ],
+  "traces": [
+    {
+      "ref": "trace:payment-001",
+      "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+      "spans": [
+        {
+          "service": "checkout",
+          "operation": "POST /checkout",
+          "duration_ms": 182.4,
+          "error": true,
+          "error_message": "payment authorization returned HTTP 401"
+        },
+        {
+          "service": "payment",
+          "operation": "POST /authorize",
+          "duration_ms": 41.7,
+          "error": true,
+          "error_message": "invalid token"
+        }
+      ]
+    }
+  ]
+}

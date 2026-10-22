@@ -1,0 +1,116 @@
+{
+  "incident_id": "inc-recommendation-002",
+  "alert": {
+    "name": "RecommendationLatencyHigh",
+    "service": "recommendation",
+    "fired_at": "2026-10-22T13:58:00Z",
+    "description": "Recommendation latency is rising across dependent services."
+  },
+  "window": {
+    "start": "2026-10-22T13:45:00Z",
+    "end": "2026-10-22T14:00:00Z"
+  },
+  "services": ["recommendation", "checkout", "frontend"],
+  "metrics": [
+    {
+      "ref": "metric:recommendation:memory",
+      "metric": "process_memory_used_ratio",
+      "service": "recommendation",
+      "baseline": 0.55,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 0.58},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 0.71},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 0.86},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 0.94}
+      ]
+    },
+    {
+      "ref": "metric:recommendation:latency",
+      "metric": "http_request_duration_p95_ms",
+      "service": "recommendation",
+      "baseline": 120.0,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 126.0},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 245.0},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 510.0},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 890.0}
+      ]
+    },
+    {
+      "ref": "metric:checkout:latency",
+      "metric": "http_request_duration_p95_ms",
+      "service": "checkout",
+      "baseline": 180.0,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 182.0},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 245.0},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 430.0},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 670.0}
+      ]
+    },
+    {
+      "ref": "metric:frontend:latency",
+      "metric": "http_request_duration_p95_ms",
+      "service": "frontend",
+      "baseline": 90.0,
+      "points": [
+        {"timestamp": "2026-10-22T13:45:00Z", "value": 91.0},
+        {"timestamp": "2026-10-22T13:50:00Z", "value": 135.0},
+        {"timestamp": "2026-10-22T13:55:00Z", "value": 280.0},
+        {"timestamp": "2026-10-22T14:00:00Z", "value": 445.0}
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "ref": "log:recommendation-001",
+      "timestamp": "2026-10-22T13:52:08Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "recommendation cache retained 18432 entries; eviction queue is behind"
+    },
+    {
+      "ref": "log:recommendation-002",
+      "timestamp": "2026-10-22T13:55:44Z",
+      "service": "recommendation",
+      "severity": "error",
+      "message": "upstream catalog request failed: connection reset by peer"
+    },
+    {
+      "ref": "log:checkout-002",
+      "timestamp": "2026-10-22T13:56:11Z",
+      "service": "checkout",
+      "severity": "warning",
+      "message": "recommendation dependency exceeded 500ms timeout"
+    }
+  ],
+  "traces": [
+    {
+      "ref": "trace:recommendation-001",
+      "trace_id": "0af7651916cd43dd8448eb211c80319c",
+      "spans": [
+        {
+          "service": "checkout",
+          "operation": "GET /recommendations",
+          "duration_ms": 714.3,
+          "error": false,
+          "error_message": null
+        },
+        {
+          "service": "recommendation",
+          "operation": "GET /recommendations",
+          "duration_ms": 662.1,
+          "error": true,
+          "error_message": "upstream catalog connection reset"
+        },
+        {
+          "service": "catalog",
+          "operation": "GET /products",
+          "duration_ms": 521.8,
+          "error": true,
+          "error_message": "connection reset by peer"
+        }
+      ]
+    }
+  ]
+}
