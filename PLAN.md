@@ -24,16 +24,12 @@
 - **Frontend pairing:** one person drives and the other reviews, swapping every 45 minutes.
 
 ## Schedule
-
-### Wed Oct 21: contracts
-
-- [ ] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints  
-- [ ] **Together:** repo skeleton, branches, README  
+### Thu Oct 22: contrast & tools
+ 
+- [ ] **Together:** repo skeleton, branches, README
+- [ ] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints 
 - [ ] **Erick:** start the OpenTelemetry Demo locally; draft the Triage prompt v0  
 - [ ] **Kamal:** write 2 runbooks (payment failure, memory leak) and `allowed-actions.yaml`
-
-### Thu Oct 22: tools
-
 - [ ] **Erick:** `get_metrics`, `search_logs` and `get_traces` in fixture mode  
 - [ ] **Erick:** record 3 incident packets into `fixtures/`  
 - [ ] **Kamal:** `find_runbook`, `check_policy` and `submit_remediation_plan` (SQLite)  
