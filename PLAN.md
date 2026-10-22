@@ -63,7 +63,7 @@
 ### Thu Oct 29: deliver
 
 - [ ] **Together:** rerun the evals 3 times and record results against the targets  
-- [ ] **Together:** rehearse the demo twice, then present
+- [ ] **Together:** rehearse the demo twice
 
 ## Definition of done
 
