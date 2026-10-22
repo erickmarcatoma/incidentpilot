@@ -1,114 +1,1163 @@
 {
-  "incident_id": "inc-recommendation-002",
+  "schema_version": "1.0",
+  "incident_id": "inc-case2-memory-leak",
   "alert": {
-    "name": "RecommendationLatencyHigh",
-    "service": "recommendation",
-    "fired_at": "2026-10-22T13:58:00Z",
-    "description": "Recommendation latency is rising across dependent services."
+    "name": "HighFrontendLatency",
+    "service": "frontend",
+    "fired_at": "2026-10-22T14:10:00Z",
+    "description": "Frontend p95 latency above 1s for 5 minutes"
   },
   "window": {
-    "start": "2026-10-22T13:45:00Z",
-    "end": "2026-10-22T14:00:00Z"
+    "start": "2026-10-22T14:00:00Z",
+    "end": "2026-10-22T14:15:00Z"
   },
-  "services": ["recommendation", "checkout", "frontend"],
+  "services": [
+    "frontend",
+    "recommendation",
+    "product-catalog"
+  ],
   "metrics": [
     {
-      "ref": "metric:recommendation:memory",
-      "metric": "process_memory_used_ratio",
+      "ref": "metric:recommendation:memory_mb",
+      "metric": "memory_mb",
       "service": "recommendation",
-      "baseline": 0.55,
-      "points": [
-        {"timestamp": "2026-10-22T13:45:00Z", "value": 0.58},
-        {"timestamp": "2026-10-22T13:50:00Z", "value": 0.71},
-        {"timestamp": "2026-10-22T13:55:00Z", "value": 0.86},
-        {"timestamp": "2026-10-22T14:00:00Z", "value": 0.94}
-      ]
-    },
-    {
-      "ref": "metric:recommendation:latency",
-      "metric": "http_request_duration_p95_ms",
-      "service": "recommendation",
-      "baseline": 120.0,
-      "points": [
-        {"timestamp": "2026-10-22T13:45:00Z", "value": 126.0},
-        {"timestamp": "2026-10-22T13:50:00Z", "value": 245.0},
-        {"timestamp": "2026-10-22T13:55:00Z", "value": 510.0},
-        {"timestamp": "2026-10-22T14:00:00Z", "value": 890.0}
-      ]
-    },
-    {
-      "ref": "metric:checkout:latency",
-      "metric": "http_request_duration_p95_ms",
-      "service": "checkout",
       "baseline": 180.0,
       "points": [
-        {"timestamp": "2026-10-22T13:45:00Z", "value": 182.0},
-        {"timestamp": "2026-10-22T13:50:00Z", "value": 245.0},
-        {"timestamp": "2026-10-22T13:55:00Z", "value": 430.0},
-        {"timestamp": "2026-10-22T14:00:00Z", "value": 670.0}
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 180.44
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 180.87
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 181.06
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 181.59
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 180.86
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 181.52
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 178.3
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 211.52
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 245.49
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 275.82
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 309.13
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 335.72
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 369.77
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 399.63
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 433.71
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 465.69
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 491.83
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 525.34
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 557.53
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 596.59
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 626.65
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 650.54
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 690.75
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 713.14
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 751.76
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 775.83
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 805.23
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 851.28
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 871.57
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 903.16
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 949.07
+        }
       ]
     },
     {
-      "ref": "metric:frontend:latency",
-      "metric": "http_request_duration_p95_ms",
+      "ref": "metric:frontend:latency_p95_ms",
+      "metric": "latency_p95_ms",
       "service": "frontend",
-      "baseline": 90.0,
+      "baseline": 240.0,
       "points": [
-        {"timestamp": "2026-10-22T13:45:00Z", "value": 91.0},
-        {"timestamp": "2026-10-22T13:50:00Z", "value": 135.0},
-        {"timestamp": "2026-10-22T13:55:00Z", "value": 280.0},
-        {"timestamp": "2026-10-22T14:00:00Z", "value": 445.0}
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 244.2241
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 244.6361
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 239.7845
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 236.5673
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 232.8065
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 242.3446
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 239.5717
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 243.7401
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 238.1735
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 243.89
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 236.7269
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 244.3476
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 243.3095
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 238.7617
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 240.5516
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 242.6215
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 1325.1318
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 1354.3428
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 1374.715
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 1331.0072
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 1374.5726
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 1365.0409
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 1377.8869
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 1336.6821
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 1317.0439
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 1374.3229
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 1374.6873
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 1345.5622
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 1317.0962
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 1325.4701
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 1360.9284
+        }
+      ]
+    },
+    {
+      "ref": "metric:recommendation:latency_p95_ms",
+      "metric": "latency_p95_ms",
+      "service": "recommendation",
+      "baseline": 60.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 59.3658
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 58.7431
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 60.5434
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 58.4608
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 60.1292
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 59.5165
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 58.4088
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 60.0268
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 58.335
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 59.7611
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 58.4515
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 58.5266
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 59.7283
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 61.1767
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 58.6457
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 59.0037
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 1108.4106
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 1129.5488
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 1105.0888
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 1093.1809
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 1131.4328
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 1070.0745
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 1123.6589
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 1086.1142
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 1076.5208
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 1074.7743
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 1087.3598
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 1120.8643
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 1078.9279
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 1105.3856
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 1109.1683
+        }
+      ]
+    },
+    {
+      "ref": "metric:product-catalog:latency_p95_ms",
+      "metric": "latency_p95_ms",
+      "service": "product-catalog",
+      "baseline": 35.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 34.4261
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 35.9708
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 34.2153
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 35.4301
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 34.1289
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 34.4696
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 36.0482
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 34.3897
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 35.2979
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 34.9142
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 34.9016
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 34.9895
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 34.3537
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 35.6941
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 34.1381
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 34.4418
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 155.3919
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 157.761
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 159.1136
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 163.8598
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 158.8391
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 156.2918
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 157.6802
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 164.7194
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 155.8057
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 161.1536
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 158.8212
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 161.5441
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 158.449
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 161.8365
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 159.9768
+        }
+      ]
+    },
+    {
+      "ref": "metric:product-catalog:memory_mb",
+      "metric": "memory_mb",
+      "service": "product-catalog",
+      "baseline": 95.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 94.7891
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 94.2779
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 92.9397
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 97.0894
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 92.1867
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 95.0159
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 97.2703
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 92.6106
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 95.3093
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 95.6649
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 92.3831
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 94.3104
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 96.1598
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 94.7265
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 96.2829
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 93.0458
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 95.4752
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 94.7357
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 97.0365
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 99.4667
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 97.5263
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 98.5959
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 96.3229
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 98.4323
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 94.6817
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 95.7847
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 98.0141
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 98.3136
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 96.5446
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 94.6005
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 95.6424
+        }
       ]
     }
   ],
   "logs": [
     {
-      "ref": "log:recommendation-001",
-      "timestamp": "2026-10-22T13:52:08Z",
-      "service": "recommendation",
-      "severity": "warning",
-      "message": "recommendation cache retained 18432 entries; eviction queue is behind"
+      "ref": "log:c2-0001",
+      "timestamp": "2026-10-22T14:00:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 28ms"
     },
     {
-      "ref": "log:recommendation-002",
-      "timestamp": "2026-10-22T13:55:44Z",
+      "ref": "log:c2-0002",
+      "timestamp": "2026-10-22T14:00:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 58ms"
+    },
+    {
+      "ref": "log:c2-0003",
+      "timestamp": "2026-10-22T14:00:30Z",
       "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 55ms"
+    },
+    {
+      "ref": "log:c2-0004",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 30ms"
+    },
+    {
+      "ref": "log:c2-0005",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 46ms"
+    },
+    {
+      "ref": "log:c2-0006",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 47ms"
+    },
+    {
+      "ref": "log:c2-0007",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 48ms"
+    },
+    {
+      "ref": "log:c2-0008",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 41ms"
+    },
+    {
+      "ref": "log:c2-0009",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 25ms"
+    },
+    {
+      "ref": "log:c2-0010",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 14ms"
+    },
+    {
+      "ref": "log:c2-0011",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 43ms"
+    },
+    {
+      "ref": "log:c2-0012",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 16ms"
+    },
+    {
+      "ref": "log:c2-0046",
+      "timestamp": "2026-10-22T14:04:00Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "cache miss for product list, cache size now 1200 entries"
+    },
+    {
+      "ref": "log:c2-0013",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 51ms"
+    },
+    {
+      "ref": "log:c2-0014",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 31ms"
+    },
+    {
+      "ref": "log:c2-0015",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 26ms"
+    },
+    {
+      "ref": "log:c2-0016",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 40ms"
+    },
+    {
+      "ref": "log:c2-0017",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 19ms"
+    },
+    {
+      "ref": "log:c2-0018",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 55ms"
+    },
+    {
+      "ref": "log:c2-0047",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "cache miss for product list, cache size now 2100 entries"
+    },
+    {
+      "ref": "log:c2-0019",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 29ms"
+    },
+    {
+      "ref": "log:c2-0020",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 29ms"
+    },
+    {
+      "ref": "log:c2-0021",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 21ms"
+    },
+    {
+      "ref": "log:c2-0048",
+      "timestamp": "2026-10-22T14:07:00Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "cache miss for product list, cache size now 3000 entries"
+    },
+    {
+      "ref": "log:c2-0022",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c2-0023",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 25ms"
+    },
+    {
+      "ref": "log:c2-0024",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 17ms"
+    },
+    {
+      "ref": "log:c2-0052",
+      "timestamp": "2026-10-22T14:08:00Z",
+      "service": "frontend",
       "severity": "error",
-      "message": "upstream catalog request failed: connection reset by peer"
+      "message": "rpc error: code = DeadlineExceeded desc = context deadline exceeded (recommendation)"
     },
     {
-      "ref": "log:checkout-002",
-      "timestamp": "2026-10-22T13:56:11Z",
-      "service": "checkout",
+      "ref": "log:c2-0025",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c2-0026",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 21ms"
+    },
+    {
+      "ref": "log:c2-0027",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 37ms"
+    },
+    {
+      "ref": "log:c2-0049",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "recommendation",
       "severity": "warning",
-      "message": "recommendation dependency exceeded 500ms timeout"
+      "message": "cache miss for product list, cache size now 3900 entries"
+    },
+    {
+      "ref": "log:c2-0053",
+      "timestamp": "2026-10-22T14:08:48Z",
+      "service": "frontend",
+      "severity": "error",
+      "message": "rpc error: code = DeadlineExceeded desc = context deadline exceeded (recommendation)"
+    },
+    {
+      "ref": "log:c2-0057",
+      "timestamp": "2026-10-22T14:09:00Z",
+      "service": "frontend",
+      "severity": "warning",
+      "message": "slow upstream response from product-catalog (412ms)"
+    },
+    {
+      "ref": "log:c2-0028",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 57ms"
+    },
+    {
+      "ref": "log:c2-0029",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 36ms"
+    },
+    {
+      "ref": "log:c2-0030",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 29ms"
+    },
+    {
+      "ref": "log:c2-0054",
+      "timestamp": "2026-10-22T14:09:36Z",
+      "service": "frontend",
+      "severity": "error",
+      "message": "rpc error: code = DeadlineExceeded desc = context deadline exceeded (recommendation)"
+    },
+    {
+      "ref": "log:c2-0050",
+      "timestamp": "2026-10-22T14:10:00Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "cache miss for product list, cache size now 4800 entries"
+    },
+    {
+      "ref": "log:c2-0055",
+      "timestamp": "2026-10-22T14:10:24Z",
+      "service": "frontend",
+      "severity": "error",
+      "message": "rpc error: code = DeadlineExceeded desc = context deadline exceeded (recommendation)"
+    },
+    {
+      "ref": "log:c2-0031",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 13ms"
+    },
+    {
+      "ref": "log:c2-0032",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 44ms"
+    },
+    {
+      "ref": "log:c2-0033",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 30ms"
+    },
+    {
+      "ref": "log:c2-0056",
+      "timestamp": "2026-10-22T14:11:12Z",
+      "service": "frontend",
+      "severity": "error",
+      "message": "rpc error: code = DeadlineExceeded desc = context deadline exceeded (recommendation)"
+    },
+    {
+      "ref": "log:c2-0034",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 15ms"
+    },
+    {
+      "ref": "log:c2-0035",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 45ms"
+    },
+    {
+      "ref": "log:c2-0036",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 49ms"
+    },
+    {
+      "ref": "log:c2-0051",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "recommendation",
+      "severity": "warning",
+      "message": "cache miss for product list, cache size now 5700 entries"
+    },
+    {
+      "ref": "log:c2-0037",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c2-0038",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 18ms"
+    },
+    {
+      "ref": "log:c2-0039",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 12ms"
+    },
+    {
+      "ref": "log:c2-0040",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 23ms"
+    },
+    {
+      "ref": "log:c2-0041",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 32ms"
+    },
+    {
+      "ref": "log:c2-0042",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 16ms"
+    },
+    {
+      "ref": "log:c2-0043",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c2-0044",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "product-catalog",
+      "severity": "info",
+      "message": "product-catalog: request handled in 19ms"
+    },
+    {
+      "ref": "log:c2-0045",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "recommendation",
+      "severity": "info",
+      "message": "recommendation: request handled in 37ms"
     }
   ],
   "traces": [
     {
-      "ref": "trace:recommendation-001",
-      "trace_id": "0af7651916cd43dd8448eb211c80319c",
+      "ref": "trace:c2-0",
+      "trace_id": "c2b00000",
       "spans": [
         {
-          "service": "checkout",
-          "operation": "GET /recommendations",
-          "duration_ms": 714.3,
+          "service": "frontend",
+          "operation": "GET /",
+          "duration_ms": 1400.0,
+          "error": true,
+          "error_message": "context deadline exceeded"
+        },
+        {
+          "service": "recommendation",
+          "operation": "ListRecommendations",
+          "duration_ms": 1150.0,
+          "error": true,
+          "error_message": "context deadline exceeded"
+        },
+        {
+          "service": "product-catalog",
+          "operation": "ListProducts",
+          "duration_ms": 150.0,
+          "error": false,
+          "error_message": null
+        }
+      ]
+    },
+    {
+      "ref": "trace:c2-1",
+      "trace_id": "c2b00001",
+      "spans": [
+        {
+          "service": "frontend",
+          "operation": "GET /",
+          "duration_ms": 1420.0,
           "error": false,
           "error_message": null
         },
         {
           "service": "recommendation",
-          "operation": "GET /recommendations",
-          "duration_ms": 662.1,
-          "error": true,
-          "error_message": "upstream catalog connection reset"
+          "operation": "ListRecommendations",
+          "duration_ms": 1170.0,
+          "error": false,
+          "error_message": null
         },
         {
-          "service": "catalog",
-          "operation": "GET /products",
-          "duration_ms": 521.8,
-          "error": true,
-          "error_message": "connection reset by peer"
+          "service": "product-catalog",
+          "operation": "ListProducts",
+          "duration_ms": 151.0,
+          "error": false,
+          "error_message": null
+        }
+      ]
+    },
+    {
+      "ref": "trace:c2-2",
+      "trace_id": "c2b00002",
+      "spans": [
+        {
+          "service": "frontend",
+          "operation": "GET /",
+          "duration_ms": 1440.0,
+          "error": false,
+          "error_message": null
+        },
+        {
+          "service": "recommendation",
+          "operation": "ListRecommendations",
+          "duration_ms": 1190.0,
+          "error": false,
+          "error_message": null
+        },
+        {
+          "service": "product-catalog",
+          "operation": "ListProducts",
+          "duration_ms": 152.0,
+          "error": false,
+          "error_message": null
         }
       ]
     }

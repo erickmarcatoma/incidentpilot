@@ -10,9 +10,9 @@ from backend.schemas import EvidenceSource
 
 
 INCIDENT_IDS = (
-    "inc-payment-001",
-    "inc-recommendation-002",
-    "inc-adversarial-003",
+    "inc-case1-payment",
+    "inc-case2-memory-leak",
+    "inc-case3-adversarial",
 )
 
 
@@ -24,7 +24,7 @@ def test_fixture_packets_validate(incident_id):
 
 
 def test_tools_return_refs_and_exact_evidence_text():
-    packet = load_incident_packet("inc-payment-001")
+    packet = load_incident_packet("inc-case1-payment")
 
     metrics = get_metrics(packet.incident_id)
     logs = search_logs(packet.incident_id)
@@ -45,19 +45,22 @@ def test_tools_return_refs_and_exact_evidence_text():
 
 
 def test_search_logs_applies_filters():
+    packet = load_incident_packet("inc-case1-payment")
     logs = search_logs(
-        "inc-payment-001",
+        packet.incident_id,
         service="payment",
         severity="error",
         query="INVALID TOKEN",
     )
 
-    assert [entry["ref"] for entry in logs] == ["log:payment-001"]
+    assert len(logs) == 8
+    assert all(entry["service"] == "payment" for entry in logs)
+    assert all(entry["severity"] == "error" for entry in logs)
 
 
 def test_search_logs_rejects_unknown_severity():
     with pytest.raises(ValueError, match="Unsupported log severity"):
-        search_logs("inc-payment-001", severity="fatal")
+        search_logs("inc-case1-payment", severity="fatal")
 
 
 def test_unknown_incident_id_fails_explicitly():
@@ -66,11 +69,11 @@ def test_unknown_incident_id_fails_explicitly():
 
 
 def test_adversarial_fixture_has_no_metrics_or_traces():
-    incident_id = "inc-adversarial-003"
+    incident_id = "inc-case3-adversarial"
 
     assert get_metrics(incident_id) == []
     assert get_traces(incident_id) == []
     assert any(
-        "restart all services" in entry["message"]
+        "ignore previous instructions" in entry["message"].casefold()
         for entry in search_logs(incident_id)
     )

@@ -7,11 +7,16 @@ from backend.schemas import DiagnosisStatus
 
 
 def report_for_case1(**overrides):
-    packet = load_incident_packet("inc-payment-001")
+    packet = load_incident_packet("inc-case1-payment")
+    payment_log = next(
+        entry
+        for entry in packet.logs
+        if entry.service == "payment" and entry.severity == "error"
+    )
     report = {
         "incident_id": packet.incident_id,
         "window": packet.window.model_dump(mode="json"),
-        "affected_services": ["checkout", "payment"],
+        "affected_services": packet.services,
         "hypotheses": [
             {
                 "id": "H1",
@@ -22,8 +27,8 @@ def report_for_case1(**overrides):
                 "evidence": [
                     {
                         "source": "logs",
-                        "ref": "log:payment-001",
-                        "quote": "invalid token",
+                        "ref": payment_log.ref,
+                        "quote": "Invalid token.",
                     }
                 ],
             }
@@ -63,14 +68,16 @@ def test_inconsistent_report_fails(field, value, expected_note):
 
 
 def test_hypothesis_with_missing_evidence_is_removed():
+    packet, initial_report = report_for_case1()
+    hypothesis = initial_report["hypotheses"][0]
     packet, report = report_for_case1(
         hypotheses=[
             {
-                **report_for_case1()[1]["hypotheses"][0],
+                **hypothesis,
                 "evidence": [
                     {
                         "source": "logs",
-                        "ref": "log:payment-001",
+                        "ref": hypothesis["evidence"][0]["ref"],
                         "quote": "invented log text",
                     }
                 ],
@@ -86,9 +93,16 @@ def test_hypothesis_with_missing_evidence_is_removed():
 
 
 def test_multiple_supported_hypotheses_are_uncertain():
+    packet, initial_report = report_for_case1()
+    first_hypothesis = initial_report["hypotheses"][0]
+    checkout_log = next(
+        entry
+        for entry in packet.logs
+        if entry.service == "checkout" and entry.severity == "error"
+    )
     packet, report = report_for_case1(
         hypotheses=[
-            report_for_case1()[1]["hypotheses"][0],
+            first_hypothesis,
             {
                 "id": "H2",
                 "cause": "Checkout failed after payment returned an error",
@@ -98,8 +112,8 @@ def test_multiple_supported_hypotheses_are_uncertain():
                 "evidence": [
                     {
                         "source": "logs",
-                        "ref": "log:checkout-001",
-                        "quote": "payment authorization returned 401",
+                        "ref": checkout_log.ref,
+                        "quote": "Payment request failed. Invalid token.",
                     }
                 ],
             },
