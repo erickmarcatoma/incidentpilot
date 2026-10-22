@@ -25,20 +25,18 @@
 
 ## Schedule
 
-### Wed Oct 21: contracts
+### Thu Oct 22: contrast & tools
 
-- [ ] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints  
+- [x] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints
 - [ ] **Together:** repo skeleton, branches, README  
-- [ ] **Erick:** start the OpenTelemetry Demo locally; draft the Triage prompt v0  
+- [ ] **Erick:** start the OpenTelemetry Demo locally
+- [x] **Erick:** draft the Triage prompt v0
 - [ ] **Kamal:** write 2 runbooks (payment failure, memory leak) and `allowed-actions.yaml`
-
-### Thu Oct 22: tools
-
-- [ ] **Erick:** `get_metrics`, `search_logs` and `get_traces` in fixture mode  
-- [ ] **Erick:** record 3 incident packets into `fixtures/`  
+- [x] **Erick:** `get_metrics`, `search_logs` and `get_traces` in fixture mode
+- [x] **Erick:** record 3 incident packets into `fixtures/`
 - [ ] **Kamal:** `find_runbook`, `check_policy` and `submit_remediation_plan` (SQLite)  
 - [ ] **Kamal:** hand-write a valid sample RootCauseReport for case 1  
-- [ ] **Together:** orchestrator validator (structure, consistency, evidence, status) \+ unit tests
+- [x] **Together:** orchestrator validator (structure, consistency, evidence, status) \+ unit tests
 
 ### Fri–Sun Oct 23–25: optional
 
@@ -94,4 +92,3 @@ If the Tuesday gate slips, cut in this order:
 | OTel Demo won't run on our laptops | Not up by end of Thu 22 | Demo from fixtures only |
 | Agents disagree on the schema | Validator fails on real output Mon 26 | Fix `schemas.py` together that day |
 | LLM output varies between runs | Eval results differ across runs | Tighten prompts; report the pass rate honestly |
-
