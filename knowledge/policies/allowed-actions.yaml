@@ -1,0 +1,38 @@
+# IncidentPilot allowed actions policy
+
+actions:
+  - action: toggle_feature_flag
+    description: Enable or disable a feature flag on a service
+    requires_approval: true
+    max_scope: one_service
+
+  - action: restart_service
+    description: Restart a single service
+    requires_approval: true
+    max_scope: one_service
+
+  - action: scale_service
+    description: Change service replica count
+    requires_approval: true
+    max_scope: one_service
+
+  - action: clear_cache
+    description: Clear service cache
+    requires_approval: false
+    max_scope: one_service
+
+  - action: rollback_deployment
+    description: Roll back a service deployment
+    requires_approval: true
+    max_scope: one_service
+
+# Policies
+policy:
+  default_requires_approval: true
+  approval_required_for:
+    - action: toggle_feature_flag
+    - action: restart_service
+    - action: scale_service
+    - action: rollback_deployment
+  auto_approve:
+    - action: clear_cache
