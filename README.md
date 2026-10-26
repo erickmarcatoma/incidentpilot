@@ -40,6 +40,8 @@ The approval UI uses these JSON endpoints:
 
 | Method | Path | Request | Response |
 | --- | --- | --- | --- |
+| `GET` | `/api/incidents` | — | Recorded `IncidentPacket` fixtures |
+| `GET` | `/api/incidents/{incident_id}` | — | One recorded `IncidentPacket` fixture |
 | `POST` | `/api/incidents` | `IncidentPacket` | Validated `RootCauseReport` and an optional `RemediationPlan` |
 | `GET` | `/api/approvals` | — | Approval-queue list of `RemediationPlan` objects |
 | `GET` | `/api/approvals/{plan_id}` | — | One `RemediationPlan` |
@@ -47,7 +49,8 @@ The approval UI uses these JSON endpoints:
 | `POST` | `/api/approvals/{plan_id}/reject` | `{"reason": "..."}` | Updated plan with status `rejected` |
 
 Approving a plan records human approval; it does not execute the plan in the
-approval request. Endpoint implementation is scheduled with the API work.
+approval request. Plans are persisted in the local SQLite database. Set
+`INCIDENTPILOT_DB_PATH` to change its location.
 
 ## Agent tools
 
@@ -94,7 +97,7 @@ cp .env.example .env            # add your ANTHROPIC_API_KEY
 python -m venv .venv
 source .venv/bin/activate       # Windows: .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
-uvicorn backend.main:app --reload
+uvicorn backend.main:app --reload --env-file .env
 
 # Frontend (second terminal)
 cd frontend
@@ -102,7 +105,12 @@ npm install
 npm run dev                     # http://127.0.0.1:5173
 ```
 
-By default the agents run on the recorded incidents in `fixtures/`, so no monitoring stack is needed. To run against live data, start the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) and set the Prometheus, OpenSearch and Jaeger URLs in `.env`.
+The `/api/incidents` endpoint runs the Anthropic Triage agent against the
+recorded telemetry tools. Set `ANTHROPIC_API_KEY` in `.env`; optionally set
+`ANTHROPIC_MODEL` to choose a different supported model. The approval UI proxies
+API requests to the backend. To run against live data, start the
+[OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) and
+set the Prometheus, OpenSearch and Jaeger URLs in `.env`.
 
 ## Evaluation
 

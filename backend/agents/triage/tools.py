@@ -11,6 +11,19 @@ _FIXTURES_DIR = Path(__file__).resolve().parents[3] / "fixtures"
 _LOG_SEVERITIES = {"debug", "info", "warning", "error", "critical"}
 
 
+def list_incident_packets() -> list[IncidentPacket]:
+    """Load all recorded incident packets, excluding non-packet fixtures."""
+    packets = []
+    for fixture_path in sorted(_FIXTURES_DIR.glob("*.json")):
+        if fixture_path.name == "sample_report_case1.json":
+            continue
+        with fixture_path.open(encoding="utf-8") as fixture_file:
+            data = json.load(fixture_file)
+        if "incident_id" in data:
+            packets.append(IncidentPacket.model_validate(data))
+    return packets
+
+
 def load_incident_packet(incident_id: str) -> IncidentPacket:
     """Load a fixture by its incident id; unknown ids fail explicitly."""
     for fixture_path in sorted(_FIXTURES_DIR.glob("*.json")):

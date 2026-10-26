@@ -45,9 +45,9 @@
 
 ### Mon Oct 26: agents work alone
 
-- [ ] **Erick:** Triage agent returns a valid report for case 1  
+- [x] **Erick:** Triage agent returns a valid report for case 1
 - [ ] **Kamal:** Remediation agent returns a valid plan from the sample report  
-- [ ] **Together:** FastAPI endpoints \+ frontend scaffold
+- [x] **Together:** FastAPI endpoints \+ frontend scaffold
 
 ### Tue Oct 27: join everything (gate)
 
