@@ -6,6 +6,10 @@ from backend.schemas import (
     RootCauseReport,
 )
 
+# PRD 3e thresholds (starting values, tune on the test scenarios)
+MIN_TOP_CONFIDENCE = 0.5
+MIN_CONFIDENCE_GAP = 0.15
+
 
 def validate_report(
     packet: IncidentPacket,
@@ -64,10 +68,15 @@ def validate_report(
 
     if not valid_hypotheses:
         status = DiagnosisStatus.INSUFFICIENT_EVIDENCE
-    elif len(valid_hypotheses) > 1:
-        status = DiagnosisStatus.UNCERTAIN
     else:
-        status = DiagnosisStatus.OK
+        top = valid_hypotheses[0].confidence
+        second = valid_hypotheses[1].confidence if len(valid_hypotheses) > 1 else None
+        if top < MIN_TOP_CONFIDENCE or (
+            second is not None and top - second <= MIN_CONFIDENCE_GAP
+        ):
+            status = DiagnosisStatus.UNCERTAIN
+        else:
+            status = DiagnosisStatus.OK
 
     return validated.model_copy(
         update={

@@ -21,7 +21,7 @@ Alert ──> Triage & Log Agent ──> Orchestrator ──> Remediation Agent 
 ```
 
 1. **Triage & Log Agent.** Reads metrics, logs and traces, and returns a Root-Cause Report with up to 3 ranked hypotheses. Each hypothesis quotes real evidence with a reference id. It cannot change anything.
-2. **Orchestrator** (plain code). Validates the report structure, incident consistency, and evidence quotes. It removes unsupported hypotheses and sets status to `ok` for one supported hypothesis, `uncertain` for multiple, `insufficient_evidence` for none, or `failed` for incident inconsistencies. The agents never talk to each other directly.
+2. **Orchestrator** (plain code). Validates the report structure, incident consistency, and evidence quotes. It removes unsupported hypotheses and sets status to `ok` when the top supported hypothesis has confidence of at least 0.5 and leads the next by more than 0.15, `uncertain` when confidence is low or the leading hypotheses are close, `insufficient_evidence` when none remain, or `failed` for incident inconsistencies. The agents never talk to each other directly.
 3. **Remediation Agent.** Matches the top hypothesis to a team runbook, checks every proposed action against company policy, and submits a plan to the approval queue. It never sees raw logs and cannot run actions.
 4. **Human approval.** An engineer approves, edits or rejects the plan on the approval screen.
 5. **Executor** (plain code). Runs only allow-listed, reversible actions on one service, then checks that the service actually recovered.

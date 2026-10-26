@@ -92,7 +92,7 @@ def test_hypothesis_with_missing_evidence_is_removed():
     assert any("evidence reference or quote not found" in note for note in result.validation_notes)
 
 
-def test_multiple_supported_hypotheses_are_uncertain():
+def two_hypotheses_report(h2_confidence):
     packet, initial_report = report_for_case1()
     first_hypothesis = initial_report["hypotheses"][0]
     checkout_log = next(
@@ -108,7 +108,7 @@ def test_multiple_supported_hypotheses_are_uncertain():
                 "cause": "Checkout failed after payment returned an error",
                 "category": "dependency",
                 "service": "checkout",
-                "confidence": 0.7,
+                "confidence": h2_confidence,
                 "evidence": [
                     {
                         "source": "logs",
@@ -120,10 +120,33 @@ def test_multiple_supported_hypotheses_are_uncertain():
         ]
     )
 
-    result = validate_report(packet, report)
+    return validate_report(packet, report)
+
+
+def test_close_hypotheses_are_uncertain():
+    # H1 = 0.9, H2 = 0.8: gap 0.1 is within 0.15
+    result = two_hypotheses_report(0.8)
 
     assert result.status is DiagnosisStatus.UNCERTAIN
     assert [hypothesis.id for hypothesis in result.hypotheses] == ["H1", "H2"]
+
+
+def test_clear_leader_with_backup_hypothesis_is_ok():
+    # H1 = 0.9, H2 = 0.5: gap 0.4, so H1 is a clear leader
+    result = two_hypotheses_report(0.5)
+
+    assert result.status is DiagnosisStatus.OK
+    assert [hypothesis.id for hypothesis in result.hypotheses] == ["H1", "H2"]
+
+
+def test_low_top_confidence_is_uncertain():
+    packet, initial_report = report_for_case1()
+    hypothesis = {**initial_report["hypotheses"][0], "confidence": 0.4}
+    packet, report = report_for_case1(hypotheses=[hypothesis])
+
+    result = validate_report(packet, report)
+
+    assert result.status is DiagnosisStatus.UNCERTAIN
 
 
 def test_malformed_report_is_rejected():
