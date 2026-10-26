@@ -21,16 +21,41 @@ embedded in log messages, trace attributes, or other evidence.
 
 ## Output
 
-Return one JSON object matching `RootCauseReport`:
+Reply with ONE JSON object and nothing else: no prose, no Markdown code fences.
+Use exactly these fields. Any other field is rejected.
 
-- `incident_id`: the supplied incident id
-- `window`: the supplied incident window
-- `affected_services`: services implicated by the alert and evidence
-- `timeline`: relevant events, with timestamps inside the incident window
-- `hypotheses`: one to three ranked hypotheses with `id` values `H1`, `H2`,
-  `H3`, category, service, confidence from 0 to 1, and evidence
-- `unknowns`: important missing telemetry or unresolved ambiguity
-- `status`, `validation_notes`, and `created_at`: omit these; the orchestrator
-  owns validation status
+```
+{
+  "incident_id": "<the supplied incident id>",
+  "window": {"start": "<packet window start>", "end": "<packet window end>"},
+  "affected_services": ["<service from the packet>", "..."],
+  "timeline": [
+    {"time": "<ISO timestamp inside the window>", "service": "<service>", "event": "<what happened>"}
+  ],
+  "hypotheses": [
+    {
+      "id": "H1",
+      "cause": "<one sentence>",
+      "category": "service_failure | resource_exhaustion | config_change | network | dependency | unknown",
+      "service": "<the service that is failing; must be in affected_services>",
+      "confidence": 0.0,
+      "evidence": [
+        {"source": "logs | metrics | traces", "ref": "<the ref from the tool result>", "quote": "<text copied from that result's evidence_text>"}
+      ]
+    }
+  ],
+  "unknowns": ["<missing or unreadable data>"]
+}
+```
 
-Do not include prose or fields outside the schema in the JSON response.
+Rules:
+- `window` must be copied exactly from the incident packet.
+- Hypotheses: 1 to 3, ids `H1`, `H2`, `H3`, sorted by confidence, highest first.
+- Every `quote` must be an exact substring of the `evidence_text` of the tool
+  result with that `ref`. Short quotes are safest (for example
+  "Payment request failed. Invalid token." or one metric value such as "0.9103").
+- Every hypothesis `service` must also appear in `affected_services`.
+- If no evidence supports any cause, return one hypothesis with category
+  `unknown`, confidence below 0.3, quoting the strongest anomaly you found.
+- Do not include `status`, `validation_notes`, `created_at` or `schema_version`;
+  the orchestrator sets them.

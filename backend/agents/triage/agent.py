@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,8 @@ from backend.schemas import IncidentPacket, RootCauseReport
 
 _PROMPT_PATH = Path(__file__).with_name("prompt.md")
 _MAX_TOOL_ROUNDS = 8
+_MAX_REPORT_RETRIES = 1  # PRD 3e: one retry with the error, then fail
+_DEFAULT_MODEL = "claude-sonnet-5-5"
 _TOOLS: list[dict[str, object]] = [
     {
         "name": "get_metrics",
@@ -90,13 +93,14 @@ def run_triage(
     system_prompt = _PROMPT_PATH.read_text(encoding="utf-8")
     report_text: str | None = None
 
-    for round_number in range(_MAX_TOOL_ROUNDS + 1):
+    retries_left = _MAX_REPORT_RETRIES
+    rounds = 0
+    while True:
+        round_number = rounds
+        rounds += 1
         response = client.messages.create(
-            model=os.getenv(
-                "TRIAGE_MODEL",
-                os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
-            ),
-            max_tokens=2048,
+            model=os.getenv("TRIAGE_MODEL") or os.getenv("ANTHROPIC_MODEL") or _DEFAULT_MODEL,
+            max_tokens=4096,
             system=system_prompt,
             messages=messages,
             tools=_TOOLS,
@@ -110,7 +114,33 @@ def run_triage(
                 for block in response.content
                 if _block_value(block, "type") == "text"
             )
-            break
+            try:
+                report = RootCauseReport.model_validate_json(_extract_json(report_text))
+            except (ValidationError, ValueError) as exc:
+                if retries_left <= 0:
+                    raise TriageAgentError(
+                        f"Triage returned a report that failed validation: {_short_error(exc)}"
+                    ) from exc
+                retries_left -= 1
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": [_block_as_dict(block) for block in response.content],
+                    }
+                )
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "Your report was rejected by the schema validator:\n"
+                            f"{_short_error(exc)}\n"
+                            "Reply again with only the corrected JSON object, "
+                            "using exactly the fields in the Output section."
+                        ),
+                    }
+                )
+                continue
+            return validate_report(packet, report)
         if round_number == _MAX_TOOL_ROUNDS:
             raise TriageAgentError(
                 f"Triage exceeded the {_MAX_TOOL_ROUNDS}-round tool-use limit"
@@ -142,14 +172,24 @@ def run_triage(
             )
         messages.append({"role": "user", "content": tool_results})
 
-    if not report_text:
-        raise TriageAgentError("Triage did not return a JSON report")
 
-    try:
-        report = RootCauseReport.model_validate_json(report_text)
-        return validate_report(packet, report)
-    except ValidationError as exc:
-        raise TriageAgentError("Triage returned a report that failed validation") from exc
+
+def _extract_json(text: str | None) -> str:
+    """Pull the JSON object out of a reply that may have code fences or prose around it."""
+    if not text or not text.strip():
+        raise ValueError("Triage did not return a JSON report")
+    fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
+    if fenced:
+        return fenced.group(1)
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end <= start:
+        raise ValueError("Triage reply contained no JSON object")
+    return text[start : end + 1]
+
+
+def _short_error(exc: Exception, limit: int = 1500) -> str:
+    message = str(exc)
+    return message if len(message) <= limit else message[:limit] + " ..."
 
 
 def _run_tool(
