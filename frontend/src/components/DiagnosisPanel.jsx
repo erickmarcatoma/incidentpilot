@@ -1,73 +1,122 @@
-function formatDate(value) {
-  return new Date(value).toLocaleString();
+import { useState } from "react";
+
+import StatusBanner from "./StatusBanner.jsx";
+
+function label(value) {
+  return (value || "").replaceAll("_", " ");
 }
 
-export default function DiagnosisPanel({ report }) {
+function confidenceTone(confidence) {
+  if (confidence >= 0.7) return "good";
+  if (confidence >= 0.5) return "warn";
+  return "danger";
+}
+
+function HypothesisCard({ hypothesis, leading }) {
+  return (
+    <article className={`hypothesis ${leading ? "is-leading" : ""}`}>
+      <header className="hypothesis-head">
+        <span className="hypothesis-icon" aria-hidden="true">⚠</span>
+        <h3>
+          <span className="hypothesis-id">{hypothesis.id}:</span> {hypothesis.cause}
+        </h3>
+        <span className={`chip chip-${confidenceTone(hypothesis.confidence)}`}>
+          Confidence {hypothesis.confidence.toFixed(2)}
+        </span>
+      </header>
+      <p className="hypothesis-meta">
+        <span className="tag">{label(hypothesis.category)}</span>
+        <span className="tag">{hypothesis.service}</span>
+      </p>
+      <div className="evidence">
+        <span className="section-label">Evidence</span>
+        <ul className="evidence-list">
+          {hypothesis.evidence.map((evidence) => (
+            <li key={`${evidence.source}-${evidence.ref}-${evidence.quote}`}>
+              <span className="evidence-ref">{evidence.ref}</span>
+              <span className="evidence-source">{evidence.source}</span>
+              <code className="evidence-quote">{evidence.quote}</code>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  );
+}
+
+export default function DiagnosisPanel({ report, busy }) {
+  const [showAlternatives, setShowAlternatives] = useState(false);
+
+  if (busy && !report) {
+    return (
+      <section className="card">
+        <p className="section-label">Diagnosis</p>
+        <div className="loading">
+          <span className="spinner" aria-hidden="true" />
+          Triage agent is reading metrics, logs and traces…
+        </div>
+      </section>
+    );
+  }
+
   if (!report) {
     return (
-      <section className="panel diagnosis-panel diagnosis-empty">
-        <p className="eyebrow">DIAGNOSIS</p>
-        <h2>Root-cause report</h2>
-        <p className="empty-state">
-          Run triage on a recorded incident to inspect evidence-backed hypotheses.
+      <section className="card empty">
+        <p className="section-label">Diagnosis</p>
+        <h2>No diagnosis yet</h2>
+        <p className="muted">
+          Run triage on an incident. Every cause it reports must quote evidence that exists
+          in the telemetry.
         </p>
       </section>
     );
   }
 
+  const [leading, ...alternatives] = report.hypotheses;
+  const uncertain = report.status === "uncertain";
+  const sideBySide = uncertain && alternatives.length > 0;
+
   return (
-    <section className="panel diagnosis-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">DIAGNOSIS / {report.incident_id}</p>
-          <h2>Root-cause report</h2>
-        </div>
-        <span className={`status-pill status-${report.status || "pending"}`}>
-          {(report.status || "unvalidated").replaceAll("_", " ")}
-        </span>
+    <section className="card diagnosis">
+      <div className="card-head">
+        <p className="section-label">Diagnosis · {report.incident_id}</p>
+        <span className="muted small">{report.affected_services.join(", ")}</span>
       </div>
-      <div className="report-summary">
-        <div>
-          <span className="field-label">Affected services</span>
-          <p>{report.affected_services.join(", ")}</p>
+
+      <StatusBanner status={report.status} />
+
+      {leading ? (
+        sideBySide ? (
+          <div className="compare">
+            <HypothesisCard hypothesis={leading} leading />
+            <HypothesisCard hypothesis={alternatives[0]} />
+          </div>
+        ) : (
+          <HypothesisCard hypothesis={leading} leading />
+        )
+      ) : null}
+
+      {alternatives.length > (sideBySide ? 1 : 0) && (
+        <div className="alternatives">
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => setShowAlternatives((open) => !open)}
+            aria-expanded={showAlternatives}
+          >
+            {showAlternatives ? "Hide" : "Show"} other hypotheses (
+            {alternatives.length - (sideBySide ? 1 : 0)})
+          </button>
+          {showAlternatives &&
+            alternatives
+              .slice(sideBySide ? 1 : 0)
+              .map((hypothesis) => <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />)}
         </div>
-        <div>
-          <span className="field-label">Incident window</span>
-          <p>
-            {formatDate(report.window.start)} – {formatDate(report.window.end)}
-          </p>
-        </div>
-      </div>
-      <div className="hypothesis-list">
-        {report.hypotheses.map((hypothesis, index) => (
-          <article className="hypothesis-card" key={hypothesis.id}>
-            <div className="hypothesis-heading">
-              <span className="hypothesis-id">{hypothesis.id}</span>
-              <span className="confidence">
-                {Math.round(hypothesis.confidence * 100)}% confidence
-              </span>
-              {index === 0 && <span className="top-hypothesis">Leading</span>}
-            </div>
-            <h3>{hypothesis.cause}</h3>
-            <p className="hypothesis-meta">
-              {hypothesis.category.replaceAll("_", " ")} · {hypothesis.service}
-            </p>
-            <div className="evidence-list">
-              {hypothesis.evidence.map((evidence) => (
-                <blockquote key={`${evidence.source}-${evidence.ref}`}>
-                  <span>
-                    {evidence.source} / {evidence.ref}
-                  </span>
-                  “{evidence.quote}”
-                </blockquote>
-              ))}
-            </div>
-          </article>
-        ))}
-      </div>
+      )}
+
       {report.unknowns?.length > 0 && (
-        <div className="unknowns">
-          <span className="field-label">Unknowns</span>
+        <div className="note note-warn">
+          <span className="section-label">Unknowns</span>
           <ul>
             {report.unknowns.map((unknown) => (
               <li key={unknown}>{unknown}</li>
@@ -75,11 +124,15 @@ export default function DiagnosisPanel({ report }) {
           </ul>
         </div>
       )}
+
       {report.validation_notes?.length > 0 && (
-        <div className="validation-notes">
-          {report.validation_notes.map((note) => (
-            <p key={note}>{note}</p>
-          ))}
+        <div className="note">
+          <span className="section-label">Validation notes</span>
+          <ul>
+            {report.validation_notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
         </div>
       )}
     </section>

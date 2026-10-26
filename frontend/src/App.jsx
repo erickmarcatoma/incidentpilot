@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import ApprovalQueue from "./components/ApprovalQueue.jsx";
 import DiagnosisPanel from "./components/DiagnosisPanel.jsx";
@@ -14,20 +14,49 @@ async function request(path, options) {
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed (${response.status})`);
+    const detail = Array.isArray(body.detail)
+      ? body.detail.map((item) => item.msg).join(" ")
+      : body.detail;
+    throw new Error(detail || `Request failed (${response.status})`);
   }
   return response.json();
+}
+
+function timeAgo(value) {
+  const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60000);
+  if (Number.isNaN(minutes)) return "";
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h ago`;
+  return new Date(value).toLocaleDateString();
+}
+
+function Shield() {
+  return (
+    <svg viewBox="0 0 24 24" className="shield" aria-hidden="true">
+      <path d="M12 2.5 20 5.5v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6l8-3Z" />
+      <path d="M12 7.5v9M7.5 12h9M9 9l6 6M15 9l-6 6" />
+    </svg>
+  );
 }
 
 export default function App() {
   const [incidents, setIncidents] = useState([]);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
-  const [report, setReport] = useState(null);
+  const [reports, setReports] = useState({});
   const [plans, setPlans] = useState([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const selectedPlan = plans.find((plan) => plan.plan_id === selectedPlanId) || null;
+
+  const incident = incidents.find((item) => item.incident_id === selectedIncidentId) || null;
+  const report = reports[selectedIncidentId] || null;
+  const incidentPlans = useMemo(
+    () => plans.filter((plan) => plan.incident_id === selectedIncidentId),
+    [plans, selectedIncidentId],
+  );
+  const selectedPlan =
+    incidentPlans.find((plan) => plan.plan_id === selectedPlanId) || incidentPlans[0] || null;
 
   const loadWorkspace = useCallback(async () => {
     setError("");
@@ -39,13 +68,8 @@ export default function App() {
       setIncidents(incidentData);
       setPlans(planData);
       setSelectedIncidentId((current) => current || incidentData[0]?.incident_id || "");
-      setSelectedPlanId((current) =>
-        planData.some((plan) => plan.plan_id === current)
-          ? current
-          : planData[0]?.plan_id || "",
-      );
     } catch (loadError) {
-      setError(loadError.message);
+      setError(`${loadError.message}. Is the backend running on port 8000?`);
     }
   }, []);
 
@@ -54,17 +78,16 @@ export default function App() {
   }, [loadWorkspace]);
 
   async function runTriage() {
-    if (!selectedIncidentId) return;
+    if (!incident) return;
     setBusy(true);
     setError("");
-    setReport(null);
     try {
-      const packet = await request(`/api/incidents/${selectedIncidentId}`);
       const result = await request("/api/incidents", {
         method: "POST",
-        body: JSON.stringify(packet),
+        body: JSON.stringify(incident),
       });
-      setReport(result.report);
+      setReports((current) => ({ ...current, [incident.incident_id]: result.report }));
+      if (result.plan?.plan_id) setSelectedPlanId(result.plan.plan_id);
       await loadWorkspace();
     } catch (triageError) {
       setError(triageError.message);
@@ -73,21 +96,16 @@ export default function App() {
     }
   }
 
-  async function transitionPlan(action, reason) {
-    if (!selectedPlanId) return;
+  async function decide(action, reason) {
+    if (!selectedPlan) return;
     setBusy(true);
     setError("");
     try {
-      const updated = await request(
-        `/api/approvals/${selectedPlanId}/${action}`,
-        {
-          method: "POST",
-          body: action === "reject" ? JSON.stringify({ reason }) : undefined,
-        },
-      );
-      setPlans((current) =>
-        current.map((plan) => (plan.plan_id === updated.plan_id ? updated : plan)),
-      );
+      const updated = await request(`/api/approvals/${selectedPlan.plan_id}/${action}`, {
+        method: "POST",
+        body: action === "reject" ? JSON.stringify({ reason }) : undefined,
+      });
+      setPlans((current) => current.map((plan) => (plan.plan_id === updated.plan_id ? updated : plan)));
     } catch (actionError) {
       setError(actionError.message);
     } finally {
@@ -96,103 +114,99 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
+    <div className="shell">
+      <aside className="sidebar">
         <a className="brand" href="/" aria-label="IncidentPilot home">
-          <span className="brand-mark">IP</span>
-          <span>IncidentPilot</span>
+          <Shield />
+          <span>
+            Incident<span className="brand-accent">Pilot</span>
+          </span>
         </a>
-        <span className="topbar-caption">Incident response workspace</span>
-      </header>
 
-      <section className="page-heading">
-        <div>
-          <p className="eyebrow">CONTROL ROOM / TRIAGE</p>
-          <h1>Incident review</h1>
-          <p className="page-subtitle">
-            Inspect the diagnosis, then review any remediation plan before action.
-          </p>
-        </div>
-        <button className="button button-secondary" onClick={loadWorkspace}>
-          Refresh
-        </button>
-      </section>
+        <nav aria-label="Incidents">
+          <p className="nav-label">Incidents</p>
+          <ul className="incident-nav">
+            {incidents.map((item) => {
+              const itemReport = reports[item.incident_id];
+              const pending = plans.some(
+                (plan) => plan.incident_id === item.incident_id && plan.status === "pending",
+              );
+              return (
+                <li key={item.incident_id}>
+                  <button
+                    type="button"
+                    className={`nav-item ${item.incident_id === selectedIncidentId ? "is-active" : ""}`}
+                    onClick={() => setSelectedIncidentId(item.incident_id)}
+                  >
+                    <span className="nav-title">{item.alert.name}</span>
+                    <span className="nav-sub">
+                      {item.alert.service}
+                      {itemReport && <span className={`dot dot-${itemReport.status}`} />}
+                      {pending && <span className="nav-badge">plan</span>}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-      {error && <StatusBanner tone="error" message={error} />}
+        <p className="sidebar-foot">
+          Human approval required.
+          <br />
+          No action runs from this screen.
+        </p>
+      </aside>
 
-      <section className="workspace-grid">
-        <div className="primary-column">
-          <section className="panel incident-panel">
-            <div className="panel-heading">
+      <main className="main">
+        <header className="incident-head">
+          {incident ? (
+            <>
               <div>
-                <p className="eyebrow">INVESTIGATION</p>
-                <h2>Recorded incident</h2>
+                <p className="eyebrow">{incident.incident_id}</p>
+                <h1>{incident.alert.name}</h1>
+                <p className="muted">
+                  {incident.alert.description || `Alert on ${incident.alert.service}`}
+                </p>
               </div>
-              <span className="step-badge">01</span>
-            </div>
-            <div className="incident-controls">
-              <label htmlFor="incident-select">Choose a fixture</label>
-              <div className="control-row">
-                <select
-                  id="incident-select"
-                  value={selectedIncidentId}
-                  onChange={(event) => {
-                    setSelectedIncidentId(event.target.value);
-                    setReport(null);
-                  }}
-                  disabled={busy}
-                >
-                  {incidents.map((incident) => (
-                    <option key={incident.incident_id} value={incident.incident_id}>
-                      {incident.alert.name} · {incident.incident_id}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="button button-primary"
-                  onClick={runTriage}
-                  disabled={busy || !selectedIncidentId}
-                >
-                  {busy ? "Working…" : "Run triage"}
+              <div className="incident-actions">
+                <span className="muted small">Detected {timeAgo(incident.alert.fired_at)}</span>
+                <span className={`live ${report ? "is-done" : ""}`}>
+                  {report ? "Diagnosed" : busy ? "Investigating" : "Open"}
+                </span>
+                <button className="btn btn-primary" onClick={runTriage} disabled={busy}>
+                  {busy ? "Running triage…" : report ? "Run triage again" : "Run triage"}
                 </button>
               </div>
+            </>
+          ) : (
+            <div>
+              <h1>Incidents</h1>
+              <p className="muted">Loading recorded incidents…</p>
             </div>
-            {selectedIncidentId && (
-              <div className="incident-meta">
-                <span>
-                  Alert{" "}
-                  <strong>
-                    {incidents.find((item) => item.incident_id === selectedIncidentId)
-                      ?.alert.name || selectedIncidentId}
-                  </strong>
-                </span>
-                <span>Evidence checked against recorded telemetry</span>
-              </div>
-            )}
-          </section>
+          )}
+        </header>
 
-          <DiagnosisPanel report={report} />
+        {error && <StatusBanner tone="danger" message={error} />}
+
+        <div className="grid">
+          <DiagnosisPanel report={report} busy={busy} />
+          <div className="side">
+            <ApprovalQueue
+              plans={incidentPlans}
+              selectedPlanId={selectedPlan?.plan_id}
+              onSelect={setSelectedPlanId}
+            />
+            <PlanDetail
+              key={selectedPlan?.plan_id || "none"}
+              plan={selectedPlan}
+              busy={busy}
+              onApprove={() => decide("approve")}
+              onReject={(reason) => decide("reject", reason)}
+            />
+          </div>
         </div>
-
-        <aside className="secondary-column">
-          <ApprovalQueue
-            plans={plans}
-            selectedPlanId={selectedPlanId}
-            onSelect={setSelectedPlanId}
-          />
-          <PlanDetail
-            plan={selectedPlan}
-            busy={busy}
-            onApprove={() => transitionPlan("approve")}
-            onReject={(reason) => transitionPlan("reject", reason)}
-          />
-        </aside>
-      </section>
-
-      <footer className="page-footer">
-        <span>Human approval required · No actions run from this screen</span>
-        <span>IncidentPilot / 2026</span>
-      </footer>
-    </main>
+      </main>
+    </div>
   );
 }

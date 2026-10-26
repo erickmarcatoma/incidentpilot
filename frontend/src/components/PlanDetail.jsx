@@ -1,109 +1,174 @@
 import { useState } from "react";
 
+const POLICY_COPY = {
+  allowed: { tone: "good", text: "Allowed" },
+  requires_approval: { tone: "warn", text: "Needs approval" },
+  rejected: { tone: "danger", text: "Rejected" },
+};
+
+function label(value) {
+  return (value || "").replaceAll("_", " ");
+}
+
+function fileName(path) {
+  return (path || "").split(/[\\/]/).pop();
+}
+
 export default function PlanDetail({ plan, busy, onApprove, onReject }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
 
-  if (!plan) return null;
+  if (!plan) {
+    return (
+      <section className="card empty">
+        <p className="section-label">Remediation plan</p>
+        <h2>No plan for this incident</h2>
+        <p className="muted">
+          The Remediation Agent submits a plan here after a diagnosis passes validation.
+          Nothing runs until a person approves it.
+        </p>
+      </section>
+    );
+  }
 
   const canDecide = plan.status === "pending";
 
-  function rejectPlan(event) {
+  function submitReject(event) {
     event.preventDefault();
-    const trimmedReason = reason.trim();
-    if (!trimmedReason) return;
-    onReject(trimmedReason);
+    const trimmed = reason.trim();
+    if (!trimmed) return;
+    onReject(trimmed);
     setReason("");
     setRejecting(false);
   }
 
   return (
-    <section className="panel plan-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">PLAN DETAILS</p>
-          <h2>Proposed remediation</h2>
-        </div>
-        <span className={`status-pill status-${plan.status}`}>
-          {plan.status.replaceAll("_", " ")}
-        </span>
+    <section className="card plan">
+      <div className="card-head">
+        <h2 className="plan-title">
+          <span className="plan-icon" aria-hidden="true">&lt;/&gt;</span> Remediation plan
+        </h2>
+        <span className={`chip chip-status-${plan.status}`}>{label(plan.status)}</span>
       </div>
+
+      {plan.diagnosis_status === "uncertain" && (
+        <p className="pill-line warn">
+          Uncertain diagnosis: plans for {plan.addresses_hypothesis}
+          {plan.alternative_hypothesis ? `, alternative ${plan.alternative_hypothesis}` : ""}
+        </p>
+      )}
+
       <p className="plan-summary">{plan.incident_summary}</p>
-      <dl className="plan-facts">
-        <div>
-          <dt>Addresses</dt>
-          <dd>{plan.addresses_hypothesis || "Needs human review"}</dd>
+
+      {plan.status === "needs_human" ? (
+        <div className="note note-danger">
+          <span className="section-label">Needs a human</span>
+          <p>{plan.reason || "No safe automated step was found."}</p>
         </div>
-        <div>
-          <dt>Diagnosis</dt>
-          <dd>{plan.diagnosis_status.replaceAll("_", " ")}</dd>
-        </div>
-        {plan.runbook && (
-          <div>
-            <dt>Runbook</dt>
-            <dd>
-              {plan.runbook.file} / {plan.runbook.section}
-            </dd>
-          </div>
-        )}
-      </dl>
-      {plan.steps.length > 0 && (
-        <div className="plan-steps">
-          <span className="field-label">Steps</span>
-          <ol>
-            {plan.steps.map((step, index) => (
-              <li key={`${step.action}-${index}`}>
-                <strong>{step.action.replaceAll("_", " ")}</strong>
-                <span>
-                  {step.target_service} · {step.policy_result.replaceAll("_", " ")}
-                </span>
-                {step.runbook_step && <small>{step.runbook_step}</small>}
-              </li>
-            ))}
+      ) : (
+        <>
+          <p className="muted small">
+            Addresses <strong>{plan.addresses_hypothesis}</strong>
+          </p>
+          <ol className="steps">
+            {plan.steps.map((step, index) => {
+              const policy = POLICY_COPY[step.policy_result] || { tone: "neutral", text: label(step.policy_result) };
+              return (
+                <li key={`${step.action}-${index}`}>
+                  <span className="step-number">{index + 1}</span>
+                  <div className="step-body">
+                    <strong>{label(step.action)}</strong>
+                    <span className="muted small">{step.target_service}</span>
+                    {step.runbook_step && <span className="muted small">{step.runbook_step}</span>}
+                  </div>
+                  <span className={`chip chip-${policy.tone}`}>{policy.text}</span>
+                </li>
+              );
+            })}
           </ol>
+        </>
+      )}
+
+      {plan.runbook && (
+        <div className="cite">
+          <span className="section-label">Runbook citation</span>
+          <div className="cite-row">
+            <span className="cite-icon" aria-hidden="true">▤</span>
+            <div>
+              <strong>{fileName(plan.runbook.file)}</strong>
+              <span className="muted small">{plan.runbook.section}</span>
+            </div>
+          </div>
         </div>
       )}
-      {plan.reason && <p className="plan-reason">{plan.reason}</p>}
+
+      {(plan.rollback || plan.risk) && (
+        <dl className="facts">
+          {plan.risk && (
+            <div>
+              <dt>Risk</dt>
+              <dd>{plan.risk}</dd>
+            </div>
+          )}
+          {plan.rollback && (
+            <div>
+              <dt>Rollback</dt>
+              <dd>{plan.rollback}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {plan.recovery_check && (
+        <div className="recovery">
+          <span className="recovery-icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>Recovery check</strong>
+            <span className="muted small">
+              {plan.recovery_check.metric} on {plan.recovery_check.service} back under{" "}
+              {plan.recovery_check.threshold} within {plan.recovery_check.within_minutes} min
+            </span>
+          </div>
+        </div>
+      )}
+
       {canDecide && !rejecting && (
-        <div className="plan-actions">
-          <button className="button button-primary" onClick={onApprove} disabled={busy}>
-            Approve plan
+        <div className="actions">
+          <button className="btn btn-approve" onClick={onApprove} disabled={busy}>
+            ✓ Approve
           </button>
-          <button
-            className="button button-danger"
-            onClick={() => setRejecting(true)}
-            disabled={busy}
-          >
-            Reject
+          <button className="btn btn-ghost" onClick={() => setRejecting(true)} disabled={busy}>
+            ✕ Reject
           </button>
         </div>
       )}
+
       {canDecide && rejecting && (
-        <form className="reject-form" onSubmit={rejectPlan}>
-          <label htmlFor="reject-reason">Reason for rejection</label>
+        <form className="reject" onSubmit={submitReject}>
+          <label htmlFor="reject-reason">Why are you rejecting this plan?</label>
           <textarea
             id="reject-reason"
+            rows="3"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            rows="3"
             required
           />
-          <div className="plan-actions">
-            <button className="button button-danger" disabled={busy || !reason.trim()}>
-              Confirm rejection
+          <div className="actions">
+            <button className="btn btn-danger" disabled={busy || !reason.trim()}>
+              Confirm reject
             </button>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => setRejecting(false)}
-              disabled={busy}
-            >
+            <button type="button" className="btn btn-ghost" onClick={() => setRejecting(false)} disabled={busy}>
               Cancel
             </button>
           </div>
         </form>
       )}
-      <p className="safety-note">Approval records your decision; it does not run actions.</p>
+
+      {!canDecide && plan.status === "rejected" && plan.reason && (
+        <p className="muted small">Rejected: {plan.reason}</p>
+      )}
+
+      <p className="safety">Approving records your decision. Only the executor runs actions.</p>
     </section>
   );
 }
