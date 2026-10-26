@@ -92,7 +92,10 @@ def run_triage(
 
     for round_number in range(_MAX_TOOL_ROUNDS + 1):
         response = client.messages.create(
-            model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
+            model=os.getenv(
+                "TRIAGE_MODEL",
+                os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
+            ),
             max_tokens=2048,
             system=system_prompt,
             messages=messages,
