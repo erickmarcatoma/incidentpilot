@@ -78,6 +78,19 @@ def validate_report(
         else:
             status = DiagnosisStatus.OK
 
+    missing = [
+        name
+        for name, data in (
+            ("metrics", packet.metrics),
+            ("logs", packet.logs),
+            ("traces", packet.traces),
+        )
+        if not data
+    ]
+    if missing and status is DiagnosisStatus.OK:
+        status = DiagnosisStatus.UNCERTAIN
+        notes.append(f"Diagnosis incomplete: {', '.join(missing)} unavailable")
+
     return validated.model_copy(
         update={
             "hypotheses": valid_hypotheses,

@@ -165,3 +165,13 @@ def test_empty_hypotheses_are_only_valid_for_insufficient_evidence():
 
     report["status"] = "insufficient_evidence"
     assert validate_report(packet, report).status is DiagnosisStatus.INSUFFICIENT_EVIDENCE
+
+def test_missing_telemetry_cannot_be_ok():
+    # Case 3: metrics and traces are empty, so code must not call the diagnosis ok
+    packet, report = report_for_case1()
+    packet = packet.model_copy(update={"metrics": [], "traces": []})
+
+    result = validate_report(packet, report)
+
+    assert result.status is DiagnosisStatus.UNCERTAIN
+    assert any("metrics, traces unavailable" in note for note in result.validation_notes)
