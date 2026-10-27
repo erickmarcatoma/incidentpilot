@@ -44,7 +44,80 @@ function HypothesisCard({ hypothesis, leading }) {
   );
 }
 
-export default function DiagnosisPanel({ report, busy }) {
+function formatTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function IncidentOverview({ incident, busy, onRunTriage }) {
+  const sources = [
+    { label: "Metrics", count: incident.metrics?.length ?? 0 },
+    { label: "Logs", count: incident.logs?.length ?? 0 },
+    { label: "Traces", count: incident.traces?.length ?? 0 },
+  ];
+  const missing = sources.filter((source) => source.count === 0);
+
+  return (
+    <section className="card overview">
+      <p className="section-label">Before triage</p>
+      <dl className="overview-facts">
+        <div>
+          <dt>Alert</dt>
+          <dd>
+            {incident.alert.name} on <strong>{incident.alert.service}</strong>
+          </dd>
+        </div>
+        <div>
+          <dt>Window</dt>
+          <dd>
+            {formatTime(incident.window.start)} – {formatTime(incident.window.end)}
+          </dd>
+        </div>
+        <div>
+          <dt>Services</dt>
+          <dd className="service-tags">
+            {incident.services.map((service) => (
+              <span className="tag" key={service}>
+                {service}
+              </span>
+            ))}
+          </dd>
+        </div>
+      </dl>
+
+      <div>
+        <span className="section-label">Data available</span>
+        <div className="source-counts">
+          {sources.map((source) => (
+            <div key={source.label} className={`source-count ${source.count === 0 ? "is-missing" : ""}`}>
+              <strong>{source.count}</strong>
+              <span>{source.label}</span>
+            </div>
+          ))}
+        </div>
+        {missing.length > 0 && (
+          <p className="missing-note">
+            No {missing.map((source) => source.label.toLowerCase()).join(" or ")} for this incident. The
+            diagnosis cannot be marked OK.
+          </p>
+        )}
+      </div>
+
+      <div className="overview-action">
+        <p className="muted small">
+          The Triage Agent reads this data and ranks up to 3 causes. Every cause must quote evidence
+          that exists here.
+        </p>
+        <button className="btn btn-primary" onClick={onRunTriage} disabled={busy}>
+          {busy ? "Running triage…" : "Run triage"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) {
   const [showAlternatives, setShowAlternatives] = useState(false);
 
   if (busy && !report) {
@@ -57,6 +130,10 @@ export default function DiagnosisPanel({ report, busy }) {
         </div>
       </section>
     );
+  }
+
+  if (!report && incident) {
+    return <IncidentOverview incident={incident} busy={busy} onRunTriage={onRunTriage} />;
   }
 
   if (!report) {

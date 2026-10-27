@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import ApprovalQueue from "./components/ApprovalQueue.jsx";
 import DiagnosisPanel from "./components/DiagnosisPanel.jsx";
+import PipelineTracker from "./components/PipelineTracker.jsx";
 import PlanDetail from "./components/PlanDetail.jsx";
 import StatusBanner from "./components/StatusBanner.jsx";
 
@@ -22,13 +23,18 @@ async function request(path, options) {
   return response.json();
 }
 
-function timeAgo(value) {
-  const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60000);
-  if (Number.isNaN(minutes)) return "";
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h ago`;
-  return new Date(value).toLocaleDateString();
+function detectedAt(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+// "inc-case3-adversarial" -> "Case 3 · Adversarial"
+function caseLabel(incidentId) {
+  const match = /case(\d+)-(.+)$/.exec(incidentId || "");
+  if (!match) return incidentId;
+  const name = match[2].replaceAll("-", " ");
+  return `Case ${match[1]} · ${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 }
 
 function Shield() {
@@ -138,6 +144,7 @@ export default function App() {
                     className={`nav-item ${item.incident_id === selectedIncidentId ? "is-active" : ""}`}
                     onClick={() => setSelectedIncidentId(item.incident_id)}
                   >
+                    <span className="nav-case">{caseLabel(item.incident_id)}</span>
                     <span className="nav-title">{item.alert.name}</span>
                     <span className="nav-sub">
                       {item.alert.service}
@@ -170,13 +177,15 @@ export default function App() {
                 </p>
               </div>
               <div className="incident-actions">
-                <span className="muted small">Detected {timeAgo(incident.alert.fired_at)}</span>
+                <span className="muted small">Detected {detectedAt(incident.alert.fired_at)}</span>
                 <span className={`live ${report ? "is-done" : ""}`}>
                   {report ? "Diagnosed" : busy ? "Investigating" : "Open"}
                 </span>
-                <button className="btn btn-primary" onClick={runTriage} disabled={busy}>
-                  {busy ? "Running triage…" : report ? "Run triage again" : "Run triage"}
-                </button>
+                {report && (
+                  <button className="btn btn-ghost" onClick={runTriage} disabled={busy}>
+                    {busy ? "Running triage…" : "Run triage again"}
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -187,10 +196,12 @@ export default function App() {
           )}
         </header>
 
+        {incident && <PipelineTracker busy={busy} report={report} plan={selectedPlan} />}
+
         {error && <StatusBanner tone="danger" message={error} />}
 
         <div className="grid">
-          <DiagnosisPanel report={report} busy={busy} />
+          <DiagnosisPanel report={report} busy={busy} incident={incident} onRunTriage={runTriage} />
           <div className="side">
             <ApprovalQueue
               plans={incidentPlans}
@@ -203,6 +214,7 @@ export default function App() {
               busy={busy}
               onApprove={() => decide("approve")}
               onReject={(reason) => decide("reject", reason)}
+              hasDiagnosis={Boolean(report)}
             />
           </div>
         </div>

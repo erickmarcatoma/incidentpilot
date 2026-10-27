@@ -14,18 +14,19 @@ function fileName(path) {
   return (path || "").split(/[\\/]/).pop();
 }
 
-export default function PlanDetail({ plan, busy, onApprove, onReject }) {
+export default function PlanDetail({ plan, busy, onApprove, onReject, hasDiagnosis }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
 
   if (!plan) {
     return (
-      <section className="card empty">
+      <section className={`card empty ${hasDiagnosis ? "" : "is-waiting"}`}>
         <p className="section-label">Remediation plan</p>
-        <h2>No plan for this incident</h2>
+        <h2>{hasDiagnosis ? "No plan yet" : "Waiting for diagnosis"}</h2>
         <p className="muted">
-          The Remediation Agent submits a plan here after a diagnosis passes validation.
-          Nothing runs until a person approves it.
+          {hasDiagnosis
+            ? "The Remediation Agent turns the validated diagnosis into a plan here. Nothing runs until a person approves it."
+            : "A plan appears here after triage and validation. Nothing runs until a person approves it."}
         </p>
       </section>
     );

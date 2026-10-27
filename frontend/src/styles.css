@@ -851,6 +851,232 @@ textarea:focus-visible {
   text-align: center;
 }
 
+/* ---------- Sidebar case label ---------- */
+
+.nav-case {
+  color: var(--accent-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- Pipeline tracker ---------- */
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(15, 23, 48, 0.6);
+  list-style: none;
+}
+
+.pipe-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pipe-dot {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pipe-text {
+  display: grid;
+  min-width: 0;
+}
+
+.pipe-text strong {
+  font-size: 13px;
+}
+
+.pipe-text small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipe-line {
+  flex: 1;
+  height: 2px;
+  min-width: 12px;
+  margin-left: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.pipe-step.is-todo {
+  opacity: 0.55;
+}
+
+.pipe-step.is-next .pipe-dot,
+.pipe-step.is-active .pipe-dot {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  box-shadow: 0 0 0 4px rgba(47, 183, 255, 0.15);
+}
+
+.pipe-step.is-active .pipe-dot {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 7px rgba(47, 183, 255, 0.05);
+  }
+}
+
+.pipe-step.is-done .pipe-dot {
+  border-color: var(--good);
+  background: var(--good);
+  color: #052e1f;
+}
+
+.pipe-step.is-done .pipe-line {
+  background: var(--good);
+}
+
+.pipe-step.is-done.tone-warn .pipe-dot {
+  border-color: var(--warn);
+  background: var(--warn);
+  color: #3a2a00;
+}
+
+.pipe-step.is-done.tone-danger .pipe-dot {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #3b0a0a;
+}
+
+.pipe-step.tone-warn small {
+  color: var(--warn);
+}
+
+.pipe-step.tone-danger small {
+  color: var(--danger);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Incident overview (before triage) ---------- */
+
+.overview-facts {
+  display: grid;
+  gap: 12px;
+}
+
+.overview-facts div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+}
+
+.overview-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.overview-facts dd {
+  font-size: 14px;
+}
+
+.service-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.source-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.source-count {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.source-count strong {
+  font-family: var(--mono);
+  font-size: 22px;
+}
+
+.source-count span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.source-count.is-missing {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: var(--danger-bg);
+}
+
+.source-count.is-missing strong {
+  color: var(--danger);
+}
+
+.missing-note {
+  margin-top: 10px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.overview-action .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.overview-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.card.is-waiting {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1100px) {
@@ -883,6 +1109,24 @@ textarea:focus-visible {
 
   .sidebar-foot {
     display: none;
+  }
+
+  .pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pipe-line {
+    display: none;
+  }
+
+  .overview-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .overview-facts div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 
   .main {
