@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from backend.schemas import IncidentPacket, RootCauseReport
 _PROMPT_PATH = Path(__file__).with_name("prompt.md")
 _MAX_TOOL_ROUNDS = 8
 _MAX_REPORT_RETRIES = 1  # PRD 3e: one retry with the error, then fail
+_TOTAL_TIMEOUT_SECONDS = 90  # PRD 3e: limit for the whole triage run
 _DEFAULT_MODEL = "claude-sonnet-5-5"
 _TOOLS: list[dict[str, object]] = [
     {
@@ -95,7 +97,13 @@ def run_triage(
 
     retries_left = _MAX_REPORT_RETRIES
     rounds = 0
+    deadline = time.monotonic() + _TOTAL_TIMEOUT_SECONDS
     while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TriageAgentError(
+                f"Triage exceeded the {_TOTAL_TIMEOUT_SECONDS}-second limit"
+            )
         round_number = rounds
         rounds += 1
         response = client.messages.create(
@@ -104,6 +112,7 @@ def run_triage(
             system=system_prompt,
             messages=messages,
             tools=_TOOLS,
+            timeout=remaining,
         )
         tool_uses = [
             block for block in response.content if _block_value(block, "type") == "tool_use"
