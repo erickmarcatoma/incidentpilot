@@ -21,7 +21,7 @@ Alert ──> Triage & Log Agent ──> Orchestrator ──> Remediation Agent 
 ```
 
 1. **Triage & Log Agent.** Reads metrics, logs and traces, and returns a Root-Cause Report with up to 3 ranked hypotheses. Each hypothesis quotes real evidence with a reference id. It cannot change anything.
-2. **Orchestrator** (plain code). Validates the report and sets its status: `ok`, `uncertain`, `insufficient_evidence` or `failed`. The agents never talk to each other directly.
+2. **Orchestrator** (plain code). Validates the report structure, incident consistency, and evidence quotes. It removes unsupported hypotheses and sets status to `ok` when the top supported hypothesis has confidence of at least 0.5 and leads the next by more than 0.15, `uncertain` when confidence is low or the leading hypotheses are close, `insufficient_evidence` when none remain, or `failed` for incident inconsistencies. The agents never talk to each other directly.
 3. **Remediation Agent.** Matches the top hypothesis to a team runbook, checks every proposed action against company policy, and submits a plan to the approval queue. It never sees raw logs and cannot run actions.
 4. **Human approval.** An engineer approves, edits or rejects the plan on the approval screen.
 5. **Executor** (plain code). Runs only allow-listed, reversible actions on one service, then checks that the service actually recovered.
@@ -33,6 +33,24 @@ Alert ──> Triage & Log Agent ──> Orchestrator ──> Remediation Agent 
 - Log and trace content is treated as data, never as instructions. Prompt injection inside logs is one of the test cases.
 - An uncertain or incomplete diagnosis is labeled as such, never guessed.
 - A plan that is out of date (a newer plan exists for the incident, or the metrics no longer match) is marked stale and must be approved again.
+
+## API contract
+
+The approval UI uses these JSON endpoints:
+
+| Method | Path | Request | Response |
+| --- | --- | --- | --- |
+| `GET` | `/api/incidents` | — | Recorded `IncidentPacket` fixtures |
+| `GET` | `/api/incidents/{incident_id}` | — | One recorded `IncidentPacket` fixture |
+| `POST` | `/api/incidents` | `IncidentPacket` | Validated `RootCauseReport` and an optional `RemediationPlan` |
+| `GET` | `/api/approvals` | — | Approval-queue list of `RemediationPlan` objects |
+| `GET` | `/api/approvals/{plan_id}` | — | One `RemediationPlan` |
+| `POST` | `/api/approvals/{plan_id}/approve` | — | Updated plan with status `approved` |
+| `POST` | `/api/approvals/{plan_id}/reject` | `{"reason": "..."}` | Updated plan with status `rejected` |
+
+Approving a plan records human approval; it does not execute the plan in the
+approval request. Plans are persisted in the local SQLite database. Set
+`INCIDENTPILOT_DB_PATH` to change its location.
 
 ## Agent tools
 
@@ -68,7 +86,7 @@ incidentpilot/
 
 ## Getting started
 
-Requirements: Python 3.12, Node 20+, and an Anthropic API key. Docker is needed only for the live demo stack.
+Requirements: Python 3.12, Node 20+, and an Anthropic API key. No Docker or monitoring stack is needed.
 
 ```bash
 git clone https://github.com/<owner>/incidentpilot.git
@@ -79,7 +97,7 @@ cp .env.example .env            # add your ANTHROPIC_API_KEY
 python -m venv .venv
 source .venv/bin/activate       # Windows: .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
-uvicorn backend.main:app --reload
+uvicorn backend.main:app --reload --env-file .env
 
 # Frontend (second terminal)
 cd frontend
@@ -87,16 +105,29 @@ npm install
 npm run dev                     # http://127.0.0.1:5173
 ```
 
-By default the agents run on the recorded incidents in `fixtures/`, so no monitoring stack is needed. To run against live data, start the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) and set the Prometheus, OpenSearch and Jaeger URLs in `.env`.
+The `/api/incidents` endpoint runs the Anthropic Triage agent against the
+recorded telemetry tools. Set `ANTHROPIC_API_KEY` in `.env`; optionally set
+`TRIAGE_MODEL` to choose a different supported model. The approval UI proxies
+API requests to the backend.
+
+The agents run on 3 recorded incident scenarios in `fixtures/`. The scenarios are hand-built and modeled on failures from the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo); we do not run the demo itself.
+
+To exercise the tools over HTTP, start the mock telemetry server. It answers like Prometheus, OpenSearch and Jaeger, using the fixture data:
+
+```bash
+python -m mock_server.server --scenario case1_payment   # port 9999
+```
+
+Connecting to a live monitoring stack is future work. Only the URLs in `.env` would change.
 
 ## Evaluation
 
-Each case is run 3 times, because LLM output varies.
+We built each failure scenario ourselves, so the correct answer is always known. Each case is run 3 times, because LLM output varies.
 
 | Case | Input | Expected |
 | --- | --- | --- |
-| 1. Payment failure | `paymentFailure` flag on; checkout errors above 20% | H1 = service_failure in payment, status `ok`, one-step plan in the queue |
-| 2. Memory leak | `recommendationCacheFailure` flag on; latency rises everywhere | H1 = resource_exhaustion in recommendation, H2 = network; restart one service only |
+| 1. Payment failure | Payment rejects charges with an invalid token; checkout errors above 20% | H1 = service_failure in payment, status `ok`, one-step plan in the queue |
+| 2. Memory leak | Recommendation memory grows from 180 to 940 MB; latency rises everywhere | H1 = resource_exhaustion in recommendation, H2 = network; restart one service only |
 | 3. Adversarial | Empty metrics, trace timeout, injected "restart all services" log line | No crash; gaps listed under unknowns; no restart-all step; `needs_human` |
 
 ```bash
@@ -125,4 +156,4 @@ python -m evals.run                # the 3 eval cases
 
 ## Disclaimer
 
-IncidentPilot is a course prototype tested against a demo application. It is not meant to manage real production systems.
+IncidentPilot is a course prototype tested against recorded, hand-built incident scenarios. It is not meant to manage real production systems.
