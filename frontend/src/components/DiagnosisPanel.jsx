@@ -12,7 +12,44 @@ function confidenceTone(confidence) {
   return "danger";
 }
 
-function HypothesisCard({ hypothesis, leading }) {
+// Text the agent uses when it flags untrusted telemetry, or that looks like an instruction.
+const UNTRUSTED_PATTERN =
+  /untrusted|instruction-like|ignore (all |previous |prior )?instructions|prompt injection|SYSTEM:/i;
+
+function isUntrusted(text) {
+  return UNTRUSTED_PATTERN.test(text || "");
+}
+
+// Re-check each quote against the incident data in the browser, so the badge is not just trust.
+function verifyEvidence(evidence, incident) {
+  if (!incident) return { state: "checked", text: "Checked by orchestrator" };
+  if (evidence.source === "logs") {
+    const log = incident.logs?.find((entry) => entry.ref === evidence.ref);
+    if (!log) return { state: "missing", text: `${evidence.ref} not found` };
+    if (!log.message.includes(evidence.quote)) return { state: "missing", text: "Quote not in log" };
+    return { state: "verified", text: "Verified in log", untrustedSource: isUntrusted(log.message) };
+  }
+  if (evidence.source === "metrics") {
+    const series = incident.metrics?.find((item) => item.ref === evidence.ref);
+    return series
+      ? { state: "verified", text: "Found in metrics" }
+      : { state: "missing", text: `${evidence.ref} not found` };
+  }
+  const trace = incident.traces?.find((item) => item.ref === evidence.ref);
+  return trace
+    ? { state: "verified", text: "Found in traces" }
+    : { state: "missing", text: `${evidence.ref} not found` };
+}
+
+function UntrustedTag() {
+  return (
+    <span className="untrusted-tag" title="Text from telemetry that reads like an instruction. Treated as data, never followed.">
+      ⚠ Untrusted
+    </span>
+  );
+}
+
+function HypothesisCard({ hypothesis, leading, incident }) {
   return (
     <article className={`hypothesis ${leading ? "is-leading" : ""}`}>
       <header className="hypothesis-head">
@@ -36,11 +73,63 @@ function HypothesisCard({ hypothesis, leading }) {
               <span className="evidence-ref">{evidence.ref}</span>
               <span className="evidence-source">{evidence.source}</span>
               <code className="evidence-quote">{evidence.quote}</code>
+              <EvidenceBadge evidence={evidence} incident={incident} />
             </li>
           ))}
         </ul>
       </div>
     </article>
+  );
+}
+
+function EvidenceBadge({ evidence, incident }) {
+  const check = verifyEvidence(evidence, incident);
+  return (
+    <span className="evidence-badges">
+      <span
+        className={`verify-badge is-${check.state}`}
+        title={check.state === "verified" ? `The quote exists in ${evidence.ref}` : check.text}
+      >
+        {check.state === "missing" ? "✕" : "✓"} {check.text}
+      </span>
+      {check.untrustedSource && <UntrustedTag />}
+    </span>
+  );
+}
+
+function Timeline({ events }) {
+  const [open, setOpen] = useState(false);
+  if (!events?.length) return null;
+  const flagged = events.filter((event) => isUntrusted(event.event)).length;
+  const shown = open ? events : events.filter((event) => isUntrusted(event.event));
+
+  return (
+    <div className="timeline">
+      <div className="timeline-head">
+        <span className="section-label">Timeline · {events.length} events</span>
+        <button type="button" className="link-button" onClick={() => setOpen((value) => !value)}>
+          {open ? "Show flagged only" : "Show all"}
+        </button>
+      </div>
+      {flagged > 0 && !open && (
+        <p className="muted small">
+          {flagged} event{flagged > 1 ? "s" : ""} flagged as untrusted. The agent reported{" "}
+          {flagged > 1 ? "them" : "it"} and did not act on {flagged > 1 ? "them" : "it"}.
+        </p>
+      )}
+      {shown.length > 0 && (
+        <ol className="timeline-list">
+          {shown.map((event) => (
+            <li key={`${event.time}-${event.event}`} className={isUntrusted(event.event) ? "is-untrusted" : ""}>
+              <time>{new Date(event.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>
+              <span className="tag">{event.service}</span>
+              <span className="timeline-event">{event.event}</span>
+              {isUntrusted(event.event) && <UntrustedTag />}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }
 
@@ -165,11 +254,11 @@ export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) 
       {leading ? (
         sideBySide ? (
           <div className="compare">
-            <HypothesisCard hypothesis={leading} leading />
-            <HypothesisCard hypothesis={alternatives[0]} />
+            <HypothesisCard hypothesis={leading} leading incident={incident} />
+            <HypothesisCard hypothesis={alternatives[0]} incident={incident} />
           </div>
         ) : (
-          <HypothesisCard hypothesis={leading} leading />
+          <HypothesisCard hypothesis={leading} leading incident={incident} />
         )
       ) : null}
 
@@ -187,16 +276,22 @@ export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) 
           {showAlternatives &&
             alternatives
               .slice(sideBySide ? 1 : 0)
-              .map((hypothesis) => <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />)}
+              .map((hypothesis) => (
+                <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} incident={incident} />
+              ))}
         </div>
       )}
+
+      <Timeline events={report.timeline} />
 
       {report.unknowns?.length > 0 && (
         <div className="note note-warn">
           <span className="section-label">Unknowns</span>
           <ul>
             {report.unknowns.map((unknown) => (
-              <li key={unknown}>{unknown}</li>
+              <li key={unknown} className={isUntrusted(unknown) ? "is-untrusted" : ""}>
+                {unknown} {isUntrusted(unknown) && <UntrustedTag />}
+              </li>
             ))}
           </ul>
         </div>
