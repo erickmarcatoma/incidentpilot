@@ -53,3 +53,5 @@ The `incident_summary` is written by the Remediation side in its own words. It m
 | Schema: no rejected steps; `needs_human` has no steps and a reason; pending plans are complete | `RemediationPlan` validator in `schemas.py` |
 | Only approved, stored plans run; allow-list; one service; stale check | `executor.py` (stale and recovery checks still to be implemented) |
 | Runbook-only steps, H1 service only, `needs_human` cases, no injected text in plans | Rubric in `evals/run.py`, against the reference plans in `evals/reference/` |
+| Only structured fields cross the Triage -> Remediation handoff | `backend/handoff.py` (`RemediationInput`, `extra="forbid"`). `backend/tests/test_handoff.py` pushes a canary into every free-text field, checks the payload has exactly the allowed fields, and runs a positive control. `evals/run.py` fails any run whose payload leaks injected text. |
+| The top hypothesis must have evidence from the service it blames | `orchestrator.py`; otherwise the status can't be `ok` |

@@ -28,7 +28,7 @@
 ### Thu Oct 22: contrast & tools
 
 - [x] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints
-- [ ] **Together:** repo skeleton, branches, README  
+- [x] **Together:** repo skeleton, branches, README  
 - [x] ~~**Erick:** start the OpenTelemetry Demo locally~~ Replaced by the mock telemetry server and hand-built fixtures (the demo needs more memory than our laptops have)
 - [x] **Erick:** draft the Triage prompt v0
 - [ ] **Kamal:** write 2 runbooks (payment failure, memory leak) and `allowed-actions.yaml`
@@ -40,7 +40,7 @@
 
 ### Fri–Sun Oct 23–25: optional
 
-- [ ] **Erick:** Triage tool-use loop  
+- [x] **Erick:** Triage tool-use loop  
 - [ ] **Kamal:** Remediation tool-use loop
 
 ### Mon Oct 26: agents work alone
@@ -51,14 +51,14 @@
 
 ### Tue Oct 27: join everything (gate)
 
-- [ ] **Erick:** Triage on cases 2 and 3; one retry; 90-second timeout  
+- [x] **Erick:** Triage on cases 2 and 3; one retry; 90-second timeout  
 - [ ] **Kamal:** executor (allow-list, one service), recovery check, stale-plan check before running  
-- [ ] **Together:** approval screen: queue, plan detail, approve / reject  
+- [x] **Together:** approval screen: queue, plan detail, approve / reject  
 - [ ] **Gate:** case 1 goes from alert to a plan on the approval screen
 
 ### Wed Oct 28: evals \+ freeze
 
-- [ ] **Erick:** eval runner \+ metrics; corrupted-report tests (fake log line, deleted evidence, swapped incident\_id)  
+- [x] **Erick:** eval runner \+ metrics; corrupted-report tests (fake log line, deleted evidence, swapped incident\_id)  
 - [ ] **Kamal:** `uncertain` and `needs_human` plans; edit flow; one active plan per incident  
 - [ ] **Together:** fix eval failures; **code freeze at end of day**
 

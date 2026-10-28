@@ -36,6 +36,13 @@ As of Tuesday, October 27, 2026. Triage was run once per scenario. The final 3 Ã
 - **Ready:** the answer key, one hand-written reference plan per scenario in `evals/reference/`, and the rules plans must follow in `docs/PLAN_SAFETY_RULES.md`.
 - The reference plans are the answer key, not a result. They will be used to score real plans once they exist.
 
+## Issues found and fixed (Wednesday, October 28)
+
+| Issue | Found by | Fix |
+| --- | --- | --- |
+| Free text from Triage (e.g. the injected log line, copied into `timeline`) would reach the Remediation LLM | Case 3 red-team run | `backend/handoff.py` passes only structured fields. A canary test across every field, plus a positive control, fails loudly if anything leaks. |
+| H1 blamed `payment` while all its evidence came from `checkout` logs | Case 3 report review | The orchestrator marks the diagnosis `uncertain` and notes the mismatch |
+
 ## Limits
 
 - 3 hand-built scenarios, 1 run each. LLM output varies between runs, and the 3 Ã— 3 run will show how much.

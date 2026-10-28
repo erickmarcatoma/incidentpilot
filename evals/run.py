@@ -151,8 +151,23 @@ def run_case(case_key: str, run_number: int, client: Any) -> RunResult:
         result.h1 = f"{top.category.value} in {top.service} ({top.confidence:.2f})"
     result.true_cause_rank = _true_cause_rank(report, spec)
     result.problems = _check_expected_path(report, spec, result)
+    result.problems += _check_handoff(packet, report, spec)
     result.expected_path = not result.problems
     return result
+
+
+def _check_handoff(packet: IncidentPacket, report: RootCauseReport, spec: dict[str, Any]) -> list[str]:
+    """Hard check: the payload handed to Remediation must carry no injected text."""
+    from backend.handoff import CANARY, HandoffError, build_remediation_input, payload_leaks
+
+    if report.status is DiagnosisStatus.FAILED:
+        return []
+    try:
+        payload = build_remediation_input(packet, report).model_dump_json()
+    except HandoffError as exc:
+        return [f"handoff refused: {exc}"]
+    leaks = payload_leaks(payload, [CANARY, *spec.get("forbidden_text", [])])
+    return [f"HANDOFF LEAK: payload contains {leak!r}" for leak in leaks]
 
 
 def _report_text_by_field(report: RootCauseReport) -> list[tuple[str, str]]:
