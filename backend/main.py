@@ -1,105 +1,136 @@
-"""FastAPI app for the IncidentPilot approval screen."""
+"""FastAPI application for fixture-backed triage and plan approvals."""
 
-from fastapi import FastAPI, HTTPException, status
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+from typing import Literal
+
+from anthropic import APIError
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
-from backend.db import init_db, get_connection, DB_PATH
-from backend.agents.remediation.agent import create_remediation_plan
+from backend import db
+from backend.agents.triage.agent import (
+    TriageAgentError,
+    TriageConfigurationError,
+    run_triage,
+)
+from backend.agents.triage.tools import list_incident_packets, load_incident_packet
+from backend.schemas import IncidentPacket, PlanStatus, RemediationPlan, RootCauseReport
 
-app = FastAPI(title="IncidentPilot")
+
+class IncidentResponse(BaseModel):
+    report: RootCauseReport
+    plan: RemediationPlan | None = None
 
 
+class RejectRequest(BaseModel):
+    reason: str = Field(min_length=1)
+
+    @field_validator("reason")
+    @classmethod
+    def reason_must_not_be_blank(cls, reason: str) -> str:
+        reason = reason.strip()
+        if not reason:
+            raise ValueError("reason must not be blank")
+        return reason
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    db.initialize_database()
+    yield
+
+
+app = FastAPI(
+    title="IncidentPilot API",
+    description="Fixture-backed incident triage and human plan approvals.",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
-class HealthResponse(BaseModel):
-    status: str = "ok"
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
 
 
-class ApprovalResponse(BaseModel):
-    plan_id: str
-    incident_id: str
-    status: str
-    steps: list[dict]
-    risk: str
-    rollback: str
-    recovery_check: dict | None
-    incident_summary: str
-    diagnosis_status: str
+@app.get("/api/incidents", response_model=list[IncidentPacket])
+def incidents() -> list[IncidentPacket]:
+    return list_incident_packets()
 
 
-@app.on_event("startup")
-def startup():
-    init_db()
+@app.get("/api/incidents/{incident_id}", response_model=IncidentPacket)
+def incident(incident_id: str) -> IncidentPacket:
+    try:
+        return load_incident_packet(incident_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse()
+@app.post("/api/incidents", response_model=IncidentResponse)
+def create_incident_report(packet: IncidentPacket) -> IncidentResponse:
+    try:
+        return IncidentResponse(report=run_triage(packet))
+    except TriageConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except TriageAgentError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except APIError as exc:
+        raise HTTPException(status_code=502, detail="Anthropic request failed") from exc
 
 
-@app.get("/approvals/{plan_id}", response_model=ApprovalResponse)
-def get_approval(plan_id: str) -> ApprovalResponse:
-    conn = get_connection()
-    row = conn.execute(
-        "SELECT plan_json FROM approvals WHERE plan_id = ?",
-        (plan_id,),
-    ).fetchone()
-    conn.close()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
-    plan_data = json.loads(row["plan_json"])
-    return ApprovalResponse(**plan_data)
+@app.get("/api/approvals", response_model=list[RemediationPlan])
+def approvals() -> list[RemediationPlan]:
+    return db.list_plans()
 
 
-@app.get("/approvals/incident/{incident_id}")
-def get_approvals_for_incident(incident_id: str) -> list[dict]:
-    conn = get_connection()
-    rows = conn.execute(
-        "SELECT plan_json FROM approvals WHERE incident_id = ?",
-        (incident_id,),
-    ).fetchall()
-    conn.close()
-
-    return [json.loads(r["plan_json"]) for r in rows]
+@app.get("/api/approvals/{plan_id}", response_model=RemediationPlan)
+def approval(plan_id: str) -> RemediationPlan:
+    plan = db.get_plan(plan_id)
+    if plan is None:
+        raise HTTPException(status_code=404, detail="Approval plan not found")
+    return plan
 
 
-@app.post("/approvals/{plan_id}/approve")
-def approve_plan(plan_id: str) -> dict:
-    conn = get_connection()
-    row = conn.execute(
-        "UPDATE approvals SET status = ? WHERE plan_id = ?",
-        ("approved", plan_id),
-    ).rowcount
-    conn.commit()
-    conn.close()
-
-    if row == 0:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
-    return {"plan_id": plan_id, "status": "approved"}
-
-
-@app.post("/approvals/{plan_id}/reject")
-def reject_plan(plan_id: str, reason: str | None = None) -> dict:
-    conn = get_connection()
-    conn.execute(
-        "UPDATE approvals SET status = ? WHERE plan_id = ?",
-        ("rejected", plan_id),
-    )
-    conn.commit()
-    conn.close()
-
-    return {"plan_id": plan_id, "status": "rejected"}
+def _transition_plan(
+    plan_id: str,
+    status: Literal["approved", "rejected"],
+    reason: str | None = None,
+) -> RemediationPlan:
+    requested_status = PlanStatus(status)
+    plan = db.get_plan(plan_id)
+    if plan is None:
+        raise HTTPException(status_code=404, detail="Approval plan not found")
+    if plan.status is not PlanStatus.PENDING:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Plan cannot be {status}; current status is {plan.status.value}",
+        )
+    updated = db.update_plan_status(plan_id, requested_status, reason=reason)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Approval plan not found")
+    if updated.status is not requested_status:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Plan cannot be {status}; current status is {updated.status.value}",
+        )
+    return updated
 
 
-__all__ = ["app"]
+@app.post("/api/approvals/{plan_id}/approve", response_model=RemediationPlan)
+def approve_plan(plan_id: str) -> RemediationPlan:
+    return _transition_plan(plan_id, "approved")
+
+
+@app.post("/api/approvals/{plan_id}/reject", response_model=RemediationPlan)
+def reject_plan(plan_id: str, request: RejectRequest) -> RemediationPlan:
+    return _transition_plan(plan_id, "rejected", reason=request.reason)
