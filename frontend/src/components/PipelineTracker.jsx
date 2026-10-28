@@ -28,6 +28,14 @@ const STATUS_TONE = {
 };
 
 function stepStates({ busy, report, plan }) {
+  if (busy) {
+    // A new triage run starts the pipeline over.
+    return {
+      states: { triage: "active", validate: "todo", plan: "todo", approve: "todo" },
+      tones: {},
+      diagnosis: null,
+    };
+  }
   // A saved plan proves triage and validation already ran, even after a page reload.
   const diagnosis = report?.status || plan?.diagnosis_status || null;
   const diagnosed = Boolean(report || plan);

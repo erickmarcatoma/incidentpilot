@@ -851,6 +851,144 @@ textarea:focus-visible {
   text-align: center;
 }
 
+/* ---------- Header status tones ---------- */
+
+.live.tone-good::before {
+  background: var(--good);
+  box-shadow: 0 0 0 4px var(--good-bg);
+}
+
+.live.tone-warn {
+  color: var(--warn);
+}
+
+.live.tone-danger {
+  color: var(--danger);
+}
+
+.live.tone-danger::before {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px var(--danger-bg);
+}
+
+.live.tone-active::before {
+  background: var(--accent-2);
+  box-shadow: 0 0 0 4px rgba(47, 183, 255, 0.15);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* ---------- Triage progress ---------- */
+
+.progress-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: opacity 200ms ease;
+}
+
+.progress-step span:last-child {
+  display: grid;
+}
+
+.progress-step strong {
+  font-size: 14px;
+}
+
+.progress-step small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.progress-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.progress-icon .spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.progress-step.is-todo {
+  opacity: 0.45;
+}
+
+.progress-step.is-active .progress-icon {
+  border-color: var(--accent-2);
+}
+
+.progress-step.is-done .progress-icon {
+  border-color: var(--good);
+  background: var(--good);
+  color: #052e1f;
+}
+
+.progress-bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--line);
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 250ms linear;
+}
+
+/* ---------- Approve confirmation ---------- */
+
+.confirm {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 12px;
+  background: var(--good-bg);
+}
+
+.confirm > strong {
+  font-size: 15px;
+}
+
+.confirm-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.confirm-list code {
+  color: var(--accent-2);
+  font-family: var(--mono);
+}
+
+.confirm-warn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 13px;
+}
+
 /* ---------- Evidence verification + untrusted ---------- */
 
 .evidence-badges {

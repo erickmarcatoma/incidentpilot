@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import StatusBanner from "./StatusBanner.jsx";
+import TriageProgress from "./TriageProgress.jsx";
 
 function label(value) {
   return (value || "").replaceAll("_", " ");
@@ -209,16 +210,8 @@ function IncidentOverview({ incident, busy, onRunTriage }) {
 export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) {
   const [showAlternatives, setShowAlternatives] = useState(false);
 
-  if (busy && !report) {
-    return (
-      <section className="card">
-        <p className="section-label">Diagnosis</p>
-        <div className="loading">
-          <span className="spinner" aria-hidden="true" />
-          Triage agent is reading metrics, logs and traces…
-        </div>
-      </section>
-    );
+  if (busy) {
+    return <TriageProgress incidentId={incident?.incident_id} />;
   }
 
   if (!report && incident) {

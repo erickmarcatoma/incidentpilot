@@ -37,6 +37,19 @@ function caseLabel(incidentId) {
   return `Case ${match[1]} · ${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 }
 
+const HEADER_STATUS = {
+  ok: { text: "Diagnosed · OK", tone: "tone-good" },
+  uncertain: { text: "Diagnosed · Uncertain", tone: "tone-warn" },
+  insufficient_evidence: { text: "Insufficient evidence", tone: "tone-danger" },
+  failed: { text: "Diagnosis failed", tone: "tone-danger" },
+};
+
+function headerStatus(report, busy) {
+  if (busy) return { text: "Investigating", tone: "tone-active" };
+  if (!report) return { text: "Open", tone: "" };
+  return HEADER_STATUS[report.status] || { text: "Diagnosed", tone: "tone-good" };
+}
+
 function Shield() {
   return (
     <svg viewBox="0 0 24 24" className="shield" aria-hidden="true">
@@ -178,8 +191,8 @@ export default function App() {
               </div>
               <div className="incident-actions">
                 <span className="muted small">Detected {detectedAt(incident.alert.fired_at)}</span>
-                <span className={`live ${report ? "is-done" : ""}`}>
-                  {report ? "Diagnosed" : busy ? "Investigating" : "Open"}
+                <span className={`live ${headerStatus(report, busy).tone}`}>
+                  {headerStatus(report, busy).text}
                 </span>
                 {report && (
                   <button className="btn btn-ghost" onClick={runTriage} disabled={busy}>
