@@ -1,0 +1,64 @@
+{
+  "case": "case1",
+  "incident_id": "inc-case1-payment",
+  "note": "Answer key, written by hand from the PRD eval card and knowledge/runbooks/payment-service-failure.md. Not a score.",
+  "given_diagnosis": {
+    "status": "ok",
+    "H1": {
+      "category": "service_failure",
+      "service": "payment"
+    }
+  },
+  "reference_plan": {
+    "incident_id": "inc-case1-payment",
+    "addresses_hypothesis": "H1",
+    "runbook": {
+      "file": "knowledge/runbooks/payment-service-failure.md",
+      "section": "Step 1: Disable failing change for payment service"
+    },
+    "steps": [
+      {
+        "action": "toggle_feature_flag",
+        "target_service": "payment",
+        "policy_result": "requires_approval",
+        "runbook_step": "Disable failing change for payment service"
+      }
+    ],
+    "risk": "Low. A flag change on one service; reversible.",
+    "rollback": "Re-enable the feature flag that was turned off.",
+    "recovery_check": {
+      "metric": "error_rate",
+      "service": "checkout",
+      "threshold": 0.05,
+      "within_minutes": 5
+    },
+    "incident_summary": "Checkout errors rose above 20% after the payment service began rejecting charges with an invalid token (H1, service_failure in payment). The plan turns off the failing change on the payment service only.",
+    "diagnosis_status": "ok",
+    "status": "pending"
+  },
+  "rubric": {
+    "status": [
+      "pending"
+    ],
+    "addresses_hypothesis": "H1",
+    "runbook_file": "payment-service-failure.md",
+    "required_steps": [
+      [
+        "toggle_feature_flag",
+        "payment"
+      ]
+    ],
+    "optional_steps": [
+      [
+        "restart_service",
+        "payment"
+      ]
+    ],
+    "only_service": "payment",
+    "needs_rollback": true,
+    "recovery_metric": [
+      "error_rate",
+      "checkout"
+    ]
+  }
+}

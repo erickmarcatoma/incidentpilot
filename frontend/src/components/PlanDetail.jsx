@@ -14,18 +14,20 @@ function fileName(path) {
   return (path || "").split(/[\\/]/).pop();
 }
 
-export default function PlanDetail({ plan, busy, onApprove, onReject }) {
+export default function PlanDetail({ plan, busy, onApprove, onReject, hasDiagnosis }) {
   const [rejecting, setRejecting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [reason, setReason] = useState("");
 
   if (!plan) {
     return (
-      <section className="card empty">
+      <section className={`card empty ${hasDiagnosis ? "" : "is-waiting"}`}>
         <p className="section-label">Remediation plan</p>
-        <h2>No plan for this incident</h2>
+        <h2>{hasDiagnosis ? "No plan yet" : "Waiting for diagnosis"}</h2>
         <p className="muted">
-          The Remediation Agent submits a plan here after a diagnosis passes validation.
-          Nothing runs until a person approves it.
+          {hasDiagnosis
+            ? "The Remediation Agent turns the validated diagnosis into a plan here. Nothing runs until a person approves it."
+            : "A plan appears here after triage and validation. Nothing runs until a person approves it."}
         </p>
       </section>
     );
@@ -132,14 +134,63 @@ export default function PlanDetail({ plan, busy, onApprove, onReject }) {
         </div>
       )}
 
-      {canDecide && !rejecting && (
+      {canDecide && !rejecting && !confirming && (
         <div className="actions">
-          <button className="btn btn-approve" onClick={onApprove} disabled={busy}>
+          <button className="btn btn-approve" onClick={() => setConfirming(true)} disabled={busy}>
             ✓ Approve
           </button>
           <button className="btn btn-ghost" onClick={() => setRejecting(true)} disabled={busy}>
             ✕ Reject
           </button>
+        </div>
+      )}
+
+      {canDecide && confirming && (
+        <div className="confirm" role="alertdialog" aria-labelledby="confirm-title">
+          <strong id="confirm-title">Approve this plan?</strong>
+          {plan.steps.length > 0 ? (
+            <ul className="confirm-list">
+              {plan.steps.map((step, index) => (
+                <li key={`${step.action}-${index}`}>
+                  Will run <code>{step.action}</code> on <strong>{step.target_service}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>This plan has no automated steps.</p>
+          )}
+          {plan.rollback && (
+            <p className="muted small">
+              <strong>Rollback:</strong> {plan.rollback}
+            </p>
+          )}
+          {plan.recovery_check && (
+            <p className="muted small">
+              <strong>Then checks:</strong> {plan.recovery_check.metric} on {plan.recovery_check.service} within{" "}
+              {plan.recovery_check.within_minutes} min
+            </p>
+          )}
+          {plan.diagnosis_status !== "ok" && (
+            <p className="confirm-warn">
+              The diagnosis is <strong>{label(plan.diagnosis_status)}</strong>. Check the alternative before approving.
+            </p>
+          )}
+          <div className="actions">
+            <button
+              className="btn btn-approve"
+              onClick={() => {
+                setConfirming(false);
+                onApprove();
+              }}
+              disabled={busy}
+              autoFocus
+            >
+              Yes, approve
+            </button>
+            <button className="btn btn-ghost" onClick={() => setConfirming(false)} disabled={busy}>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 

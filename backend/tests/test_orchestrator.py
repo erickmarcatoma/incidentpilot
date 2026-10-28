@@ -175,3 +175,18 @@ def test_missing_telemetry_cannot_be_ok():
 
     assert result.status is DiagnosisStatus.UNCERTAIN
     assert any("metrics, traces unavailable" in note for note in result.validation_notes)
+
+def test_blaming_a_service_without_its_evidence_cannot_be_ok():
+    # H1 blames payment, but its only evidence is a checkout log
+    packet, report = report_for_case1()
+    checkout_log = next(
+        e for e in packet.logs if e.service == "checkout" and e.severity == "error"
+    )
+    report["hypotheses"][0]["evidence"] = [
+        {"source": "logs", "ref": checkout_log.ref, "quote": "Invalid token."}
+    ]
+
+    result = validate_report(packet, report)
+
+    assert result.status is DiagnosisStatus.UNCERTAIN
+    assert any("none of its evidence comes from payment" in n for n in result.validation_notes)

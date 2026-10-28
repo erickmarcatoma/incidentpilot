@@ -78,6 +78,18 @@ def validate_report(
         else:
             status = DiagnosisStatus.OK
 
+    if valid_hypotheses:
+        top = valid_hypotheses[0]
+        evidence_services = set().union(
+            *(packet.evidence_services(e.source, e.ref) for e in top.evidence)
+        )
+        if top.service not in evidence_services:
+            notes.append(
+                f"{top.id} blames {top.service}, but none of its evidence comes from {top.service}"
+            )
+            if status is DiagnosisStatus.OK:
+                status = DiagnosisStatus.UNCERTAIN
+
     missing = [
         name
         for name, data in (
@@ -87,9 +99,10 @@ def validate_report(
         )
         if not data
     ]
-    if missing and status is DiagnosisStatus.OK:
-        status = DiagnosisStatus.UNCERTAIN
+    if missing:
         notes.append(f"Diagnosis incomplete: {', '.join(missing)} unavailable")
+        if status is DiagnosisStatus.OK:
+            status = DiagnosisStatus.UNCERTAIN
 
     return validated.model_copy(
         update={

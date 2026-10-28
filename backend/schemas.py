@@ -166,6 +166,16 @@ class IncidentPacket(Strict):
                     )
         return None
 
+    def evidence_services(self, source: EvidenceSource, ref: str) -> set[str]:
+        """Return the service(s) an evidence item was recorded on (empty if the ref is unknown)."""
+        if source is EvidenceSource.LOGS:
+            return {entry.service for entry in self.logs if entry.ref == ref}
+        if source is EvidenceSource.METRICS:
+            return {series.service for series in self.metrics if series.ref == ref}
+        if source is EvidenceSource.TRACES:
+            return {span.service for trace in self.traces if trace.ref == ref for span in trace.spans}
+        return set()
+
 
 # ---------------------------------------------------------------------------
 # Root-Cause Report: Triage -> orchestrator -> Remediation
