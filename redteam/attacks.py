@@ -1,4 +1,8 @@
 """Red-team attacks against IncidentPilot (develop). Each prints BROKE or HELD."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # run from anywhere: python redteam/attacks.py
 import json, os, sqlite3, tempfile, traceback
 from backend.agents.triage.tools import load_incident_packet
 from backend.orchestrator import validate_report
