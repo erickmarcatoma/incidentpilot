@@ -103,7 +103,7 @@ export default function App() {
     try {
       const result = await request("/api/incidents", {
         method: "POST",
-        body: JSON.stringify(incident),
+        body: JSON.stringify({ incident_id: incident.incident_id }),
       });
       setReports((current) => ({ ...current, [incident.incident_id]: result.report }));
       if (result.plan?.plan_id) setSelectedPlanId(result.plan.plan_id);

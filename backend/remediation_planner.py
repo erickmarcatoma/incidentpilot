@@ -144,6 +144,9 @@ def plan_remediation(handoff: RemediationInput, packet: IncidentPacket | None = 
         return _needs_human(handoff, "Diagnosis incomplete: some telemetry was unavailable.")
 
     h1 = handoff.hypotheses[0]
+    if not handoff.h1_evidence_matches_service:
+        # Red-team finding C1: never act on a service the evidence doesn't implicate.
+        return _needs_human(handoff, f"{h1.id} blames {h1.service}, but none of its evidence comes from {h1.service}.")
     ref = find_runbook(h1.category.value, h1.service)
     if ref is None:
         return _needs_human(handoff, f"No runbook matches {h1.category.value} in {h1.service}.")

@@ -166,6 +166,19 @@ class IncidentPacket(Strict):
                     )
         return None
 
+    def missing_sources(self) -> list[str]:
+        """Sources with no usable data inside the incident window (red-team finding A3:
+        a metric series with zero points used to count as "available")."""
+        start, end = self.window.start, self.window.end
+        has_metrics = any(start <= p.timestamp <= end for series in self.metrics for p in series.points)
+        has_logs = any(start <= entry.timestamp <= end for entry in self.logs)
+        has_traces = any(trace.spans for trace in self.traces)
+        return [
+            name
+            for name, present in (("metrics", has_metrics), ("logs", has_logs), ("traces", has_traces))
+            if not present
+        ]
+
     def evidence_services(self, source: EvidenceSource, ref: str) -> set[str]:
         """Return the service(s) an evidence item was recorded on (empty if the ref is unknown)."""
         if source is EvidenceSource.LOGS:

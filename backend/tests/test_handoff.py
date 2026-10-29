@@ -51,7 +51,9 @@ def inject_cause(report, injected):
 
 def inject_quote(report, injected):
     # A real, verifiable quote of the injected log line: it survives the evidence check.
-    report["hypotheses"][0]["evidence"].append({"source": "logs", "ref": injected.ref, "quote": CANARY})
+    report["hypotheses"][0]["evidence"].append(
+        {"source": "logs", "ref": injected.ref, "quote": f"restarting all services. {CANARY}"}
+    )
 
 
 def inject_timeline(report, injected):
@@ -94,7 +96,8 @@ def test_payload_has_exactly_the_allowed_fields():
     packet, _, report = case3()
     payload = json.loads(build_remediation_input(packet, validate_report(packet, report)).model_dump_json())
     assert set(payload) == ALLOWED_FIELDS == {
-        "incident_id", "diagnosis_status", "telemetry_complete", "hypotheses", "report_created_at",
+        "incident_id", "diagnosis_status", "telemetry_complete", "h1_evidence_matches_service",
+        "hypotheses", "report_created_at",
     }
     for hypothesis in payload["hypotheses"]:
         assert set(hypothesis) == ALLOWED_HYPOTHESIS_FIELDS == {"id", "category", "service", "confidence"}

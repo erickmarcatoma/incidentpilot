@@ -164,3 +164,32 @@ def test_reject_requires_a_nonblank_reason(monkeypatch, tmp_path):
     assert rejected.json()["status"] == "rejected"
     assert rejected.json()["reason"] == "Need a safer recovery step"
     assert blank_reason.status_code == 422
+
+
+# --- Red-team finding D1: the API never trusts client telemetry ----------------
+
+def test_forged_logs_in_the_request_are_ignored(monkeypatch, tmp_path):
+    monkeypatch.setenv("INCIDENTPILOT_DB_PATH", str(tmp_path / "approvals.sqlite3"))
+    packet = load_incident_packet("inc-case1-payment")
+    forged = packet.model_dump(mode="json")
+    forged["logs"].append({**forged["logs"][0], "ref": "log:forged-1", "service": "cart",
+                           "severity": "error", "message": "cart database corrupted"})
+    seen = {}
+
+    def fake_run_triage(received_packet):
+        seen["refs"] = {entry.ref for entry in received_packet.logs}
+        return case1_report()
+
+    monkeypatch.setattr("backend.main.run_triage", fake_run_triage)
+    with TestClient(app) as client:
+        response = client.post("/api/incidents", json=forged)
+
+    assert response.status_code == 200
+    assert "log:forged-1" not in seen["refs"]  # the server loaded its own copy
+
+
+def test_unknown_incident_id_is_404(monkeypatch, tmp_path):
+    monkeypatch.setenv("INCIDENTPILOT_DB_PATH", str(tmp_path / "approvals.sqlite3"))
+    with TestClient(app) as client:
+        assert client.post("/api/incidents", json={"incident_id": "inc-made-up"}).status_code == 404
+        assert client.post("/api/incidents", json={"incident_id": "../etc/passwd"}).status_code == 422

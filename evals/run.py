@@ -273,6 +273,10 @@ def corrupted_report_checks() -> list[dict[str, Any]]:
         report["incident_id"] = "inc-case2-memory-leak"
         return report
 
+    def one_letter_quote(report):
+        report["hypotheses"][0]["evidence"][0]["quote"] = "a"
+        return report
+
     def unknown_service(report):
         report["affected_services"] = ["checkout", "billing"]
         return report
@@ -283,6 +287,7 @@ def corrupted_report_checks() -> list[dict[str, Any]]:
         ("Deleted evidence", deleted_evidence, "rejected"),
         ("Swapped incident_id", swapped_incident, "failed"),
         ("Unknown service", unknown_service, "failed"),
+        ("One-letter quote", one_letter_quote, "insufficient_evidence"),
     ]
     rows = []
     for name, corrupt, expected in checks:

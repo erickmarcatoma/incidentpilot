@@ -190,3 +190,42 @@ def test_blaming_a_service_without_its_evidence_cannot_be_ok():
 
     assert result.status is DiagnosisStatus.UNCERTAIN
     assert any("none of its evidence comes from payment" in n for n in result.validation_notes)
+
+
+# --- Red-team finding A1: evidence must be specific -------------------------
+
+def _with_quote(source, ref, quote):
+    packet, report = report_for_case1()
+    report["hypotheses"][0]["evidence"] = [{"source": source, "ref": ref, "quote": quote}]
+    return packet, report
+
+
+@pytest.mark.parametrize("quote", ["a", ".", "Invalid", "token."])
+def test_trivial_log_quotes_are_rejected(quote):
+    packet, report = report_for_case1()
+    ref = report["hypotheses"][0]["evidence"][0]["ref"]
+    packet, report = _with_quote("logs", ref, quote)
+
+    result = validate_report(packet, report)
+
+    assert result.status is DiagnosisStatus.INSUFFICIENT_EVIDENCE
+    assert any("too short" in note for note in result.validation_notes)
+
+
+def test_exact_metric_value_is_valid_evidence():
+    packet, _ = report_for_case1()
+    series = next(s for s in packet.metrics if s.ref == "metric:payment:error_rate")
+    value = repr(series.points[-1].value)
+    packet, report = _with_quote("metrics", series.ref, value)
+
+    assert validate_report(packet, report).hypotheses
+
+
+def test_metric_number_not_in_the_series_is_rejected():
+    # "85.0" is in the evidence text (as the baseline) but is not a measured point
+    packet, _ = report_for_case1()
+    series = next(s for s in packet.metrics if s.ref == "metric:payment:latency_p95_ms")
+    assert 85.0 not in {p.value for p in series.points}
+    packet, report = _with_quote("metrics", series.ref, "85.0")
+
+    assert validate_report(packet, report).status is DiagnosisStatus.INSUFFICIENT_EVIDENCE

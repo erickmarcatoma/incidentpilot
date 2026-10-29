@@ -52,8 +52,9 @@ Rules:
 - `window` must be copied exactly from the incident packet.
 - Hypotheses: 1 to 3, ids `H1`, `H2`, `H3`, sorted by confidence, highest first.
 - Every `quote` must be an exact substring of the `evidence_text` of the tool
-  result with that `ref`. Short quotes are safest (for example
-  "Payment request failed. Invalid token." or one metric value such as "0.9103").
+  result with that `ref`. A log or trace quote must be at least 12 characters
+  and 2 words (for example "Payment request failed. Invalid token."). A metric
+  quote may be one exact value from that series (for example "0.9103").
 - Every hypothesis `service` must also appear in `affected_services`.
 - If no evidence supports any cause, return one hypothesis with category
   `unknown`, confidence below 0.3, quoting the strongest anomaly you found.

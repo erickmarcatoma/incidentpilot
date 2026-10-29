@@ -10,7 +10,7 @@ from typing import Literal
 from anthropic import APIError
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend import db
 from backend.agents.triage.agent import (
@@ -27,6 +27,15 @@ from backend.schemas import IncidentPacket, PlanStatus, RemediationPlan, RootCau
 class IncidentResponse(BaseModel):
     report: RootCauseReport
     plan: RemediationPlan | None = None
+
+
+class IncidentRequest(BaseModel):
+    """Only the incident id is taken from the client. Telemetry is always loaded on the
+    server (red-team finding D1: a POSTed packet could carry forged logs)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    incident_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9-]+$")
 
 
 class RejectRequest(BaseModel):
@@ -98,7 +107,11 @@ def _plan_for(packet: IncidentPacket, report: RootCauseReport) -> RemediationPla
 
 
 @app.post("/api/incidents", response_model=IncidentResponse)
-def create_incident_report(packet: IncidentPacket) -> IncidentResponse:
+def create_incident_report(request: IncidentRequest) -> IncidentResponse:
+    try:
+        packet = load_incident_packet(request.incident_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     try:
         report = run_triage(packet)
         if report.created_at is None:
