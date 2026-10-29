@@ -140,7 +140,7 @@ function formatTime(value) {
   return date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function IncidentOverview({ incident, busy, onRunTriage }) {
+function IncidentOverview({ incident, busy, onRunTriage, hasPlan }) {
   const sources = [
     { label: "Metrics", count: incident.metrics?.length ?? 0 },
     { label: "Logs", count: incident.logs?.length ?? 0 },
@@ -150,7 +150,13 @@ function IncidentOverview({ incident, busy, onRunTriage }) {
 
   return (
     <section className="card overview">
-      <p className="section-label">Before triage</p>
+      <p className="section-label">{hasPlan ? "Diagnosis not loaded" : "Before triage"}</p>
+      {hasPlan && (
+        <p className="missing-note">
+          A plan from an earlier run is saved, but its diagnosis isn&apos;t. Run triage again to see the
+          evidence.
+        </p>
+      )}
       <dl className="overview-facts">
         <div>
           <dt>Alert</dt>
@@ -207,7 +213,7 @@ function IncidentOverview({ incident, busy, onRunTriage }) {
   );
 }
 
-export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) {
+export default function DiagnosisPanel({ report, busy, incident, onRunTriage, hasPlan }) {
   const [showAlternatives, setShowAlternatives] = useState(false);
 
   if (busy) {
@@ -215,7 +221,7 @@ export default function DiagnosisPanel({ report, busy, incident, onRunTriage }) 
   }
 
   if (!report && incident) {
-    return <IncidentOverview incident={incident} busy={busy} onRunTriage={onRunTriage} />;
+    return <IncidentOverview incident={incident} busy={busy} onRunTriage={onRunTriage} hasPlan={hasPlan} />;
   }
 
   if (!report) {

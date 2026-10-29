@@ -44,8 +44,9 @@ const HEADER_STATUS = {
   failed: { text: "Diagnosis failed", tone: "tone-danger" },
 };
 
-function headerStatus(report, busy) {
+function headerStatus(report, busy, plan) {
   if (busy) return { text: "Investigating", tone: "tone-active" };
+  if (!report && plan) return { text: "Plan saved · rerun triage", tone: "tone-warn" };
   if (!report) return { text: "Open", tone: "" };
   return HEADER_STATUS[report.status] || { text: "Diagnosed", tone: "tone-good" };
 }
@@ -191,8 +192,8 @@ export default function App() {
               </div>
               <div className="incident-actions">
                 <span className="muted small">Detected {detectedAt(incident.alert.fired_at)}</span>
-                <span className={`live ${headerStatus(report, busy).tone}`}>
-                  {headerStatus(report, busy).text}
+                <span className={`live ${headerStatus(report, busy, selectedPlan).tone}`}>
+                  {headerStatus(report, busy, selectedPlan).text}
                 </span>
                 {report && (
                   <button className="btn btn-ghost" onClick={runTriage} disabled={busy}>
@@ -214,7 +215,13 @@ export default function App() {
         {error && <StatusBanner tone="danger" message={error} />}
 
         <div className="grid">
-          <DiagnosisPanel report={report} busy={busy} incident={incident} onRunTriage={runTriage} />
+          <DiagnosisPanel
+            report={report}
+            busy={busy}
+            incident={incident}
+            onRunTriage={runTriage}
+            hasPlan={incidentPlans.length > 0}
+          />
           <div className="side">
             <ApprovalQueue
               plans={incidentPlans}

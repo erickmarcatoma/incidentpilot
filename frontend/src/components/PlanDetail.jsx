@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 const POLICY_COPY = {
-  allowed: { tone: "good", text: "Allowed" },
-  requires_approval: { tone: "warn", text: "Needs approval" },
-  rejected: { tone: "danger", text: "Rejected" },
+  allowed: { tone: "good", text: "Policy: allowed" },
+  requires_approval: { tone: "warn", text: "Policy: approval required" },
+  rejected: { tone: "danger", text: "Policy: rejected" },
 };
 
 function label(value) {
