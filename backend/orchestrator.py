@@ -10,6 +10,40 @@ from backend.schemas import (
 MIN_TOP_CONFIDENCE = 0.5
 MIN_CONFIDENCE_GAP = 0.15
 
+# A quote must be specific enough to point at one record (red-team finding A1:
+# a one-letter quote like "a" used to pass as "verified" evidence).
+MIN_QUOTE_CHARS = 12
+MIN_QUOTE_WORDS = 2
+MIN_METRIC_VALUE_CHARS = 3  # a metric quote may be a single value, e.g. "0.9103"
+
+
+def _quote_problem(packet: IncidentPacket, evidence) -> str | None:
+    """Return why a piece of evidence can't be trusted, or None if it is fine."""
+    source_text = packet.evidence_text(evidence.source, evidence.ref)
+    if source_text is None:
+        return "reference not found"
+    quote = evidence.quote.strip()
+    if quote not in source_text:
+        return "quote not found"
+    if evidence.source.value == "metrics":
+        try:
+            value = float(quote)
+        except ValueError:
+            value = None
+        if value is not None:
+            values = {
+                point.value
+                for series in packet.metrics
+                if series.ref == evidence.ref
+                for point in series.points
+            }
+            if len(quote) >= MIN_METRIC_VALUE_CHARS and value in values:
+                return None
+            return "metric value not in that series"
+    if len(quote) < MIN_QUOTE_CHARS or len(quote.split()) < MIN_QUOTE_WORDS:
+        return f"quote too short to be evidence ({len(quote)} chars)"
+    return None
+
 
 def validate_report(
     packet: IncidentPacket,
@@ -50,18 +84,14 @@ def validate_report(
             )
             continue
 
-        invalid_evidence = [
-            evidence
+        problems = [
+            problem
             for evidence in hypothesis.evidence
-            if (
-                (source_text := packet.evidence_text(evidence.source, evidence.ref))
-                is None
-                or evidence.quote not in source_text
-            )
+            if (problem := _quote_problem(packet, evidence)) is not None
         ]
-        if invalid_evidence:
+        if problems:
             notes.append(
-                f"{hypothesis.id} removed: evidence reference or quote not found"
+                f"{hypothesis.id} removed: evidence reference or quote not found ({problems[0]})"
             )
             continue
         valid_hypotheses.append(hypothesis)

@@ -51,7 +51,9 @@ def inject_cause(report, injected):
 
 def inject_quote(report, injected):
     # A real, verifiable quote of the injected log line: it survives the evidence check.
-    report["hypotheses"][0]["evidence"].append({"source": "logs", "ref": injected.ref, "quote": CANARY})
+    report["hypotheses"][0]["evidence"].append(
+        {"source": "logs", "ref": injected.ref, "quote": f"restarting all services. {CANARY}"}
+    )
 
 
 def inject_timeline(report, injected):
