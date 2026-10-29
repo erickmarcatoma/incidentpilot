@@ -1,0 +1,73 @@
+{
+  "case": "case2",
+  "incident_id": "inc-case2-memory-leak",
+  "note": "Answer key, written by hand from the PRD eval card and knowledge/runbooks/memory-leak.md. Not a score.",
+  "given_diagnosis": {
+    "status": "uncertain",
+    "H1": {
+      "category": "resource_exhaustion",
+      "service": "recommendation"
+    },
+    "H2": {
+      "category": "network",
+      "service": "frontend"
+    }
+  },
+  "reference_plan": {
+    "incident_id": "inc-case2-memory-leak",
+    "addresses_hypothesis": "H1",
+    "alternative_hypothesis": "H2",
+    "runbook": {
+      "file": "knowledge/runbooks/memory-leak.md",
+      "section": "Step 1: Restart the recommendation service"
+    },
+    "steps": [
+      {
+        "action": "restart_service",
+        "target_service": "recommendation",
+        "policy_result": "requires_approval",
+        "runbook_step": "Restart the recommendation service"
+      }
+    ],
+    "risk": "Medium. A restart only relieves the leak for a while; the cause still needs a fix. If H2 (network) is the real cause, latency will not recover.",
+    "rollback": "No state to undo after a restart; if latency gets worse, stop and review H2.",
+    "recovery_check": {
+      "metric": "memory_mb",
+      "service": "recommendation",
+      "threshold": 250,
+      "within_minutes": 10
+    },
+    "incident_summary": "Frontend latency rose while recommendation memory grew from about 180 to 940 MB (H1, resource_exhaustion in recommendation). Network latency (H2) is the alternative. The plan restarts the recommendation service only, as temporary relief.",
+    "diagnosis_status": "uncertain",
+    "status": "pending"
+  },
+  "rubric": {
+    "status": [
+      "pending"
+    ],
+    "addresses_hypothesis": "H1",
+    "alternative_hypothesis_if_uncertain": "H2",
+    "runbook_file": "memory-leak.md",
+    "required_steps": [
+      [
+        "restart_service",
+        "recommendation"
+      ]
+    ],
+    "optional_steps": [
+      [
+        "toggle_feature_flag",
+        "recommendation"
+      ]
+    ],
+    "only_service": "recommendation",
+    "needs_rollback": true,
+    "recovery_metric": [
+      "memory_mb",
+      "recommendation"
+    ],
+    "summary_mentions": [
+      "temporary"
+    ]
+  }
+}

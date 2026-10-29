@@ -1,0 +1,1069 @@
+{
+  "schema_version": "1.0",
+  "incident_id": "inc-case1-payment",
+  "alert": {
+    "name": "HighCheckoutErrorRate",
+    "service": "checkout",
+    "fired_at": "2026-10-22T14:10:00Z",
+    "description": "Checkout error rate above 20% for 3 minutes"
+  },
+  "window": {
+    "start": "2026-10-22T14:00:00Z",
+    "end": "2026-10-22T14:15:00Z"
+  },
+  "services": [
+    "frontend",
+    "checkout",
+    "payment",
+    "cart"
+  ],
+  "metrics": [
+    {
+      "ref": "metric:checkout:error_rate",
+      "metric": "error_rate",
+      "service": "checkout",
+      "baseline": 0.01,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 0.0098
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 0.0102
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 0.0102
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 0.0099
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 0.01
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 0.01
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 0.0101
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 0.0102
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 0.0098
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 0.0097
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 0.0102
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 0.01
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 0.0102
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 0.0097
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 0.2392
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 0.2432
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 0.2361
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 0.2464
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 0.2458
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 0.2332
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 0.2332
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 0.2406
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 0.2463
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 0.2383
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 0.2359
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 0.2389
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 0.2332
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 0.236
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 0.2391
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 0.2399
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 0.2362
+        }
+      ]
+    },
+    {
+      "ref": "metric:payment:error_rate",
+      "metric": "error_rate",
+      "service": "payment",
+      "baseline": 0.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 0.9323
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 0.9473
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 0.9448
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 0.9224
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 0.917
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 0.9072
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 0.8944
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 0.8939
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 0.9181
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 0.91
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 0.9134
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 0.9416
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 0.9214
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 0.9233
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 0.9054
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 0.8937
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 0.9103
+        }
+      ]
+    },
+    {
+      "ref": "metric:payment:latency_p95_ms",
+      "metric": "latency_p95_ms",
+      "service": "payment",
+      "baseline": 85.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 83.6636
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 85.2256
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 84.3368
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 85.53
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 85.6412
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 82.7842
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 82.5172
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 86.7211
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 83.7727
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 83.6451
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 87.5278
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 84.8483
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 86.716
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 84.8794
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 90.751
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 88.1133
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 90.7282
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 91.9874
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 90.1252
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 91.3028
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 90.9256
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 87.6458
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 91.3944
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 90.4919
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 88.9268
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 87.4675
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 91.9738
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 89.8528
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 91.1816
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 92.0456
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 91.1563
+        }
+      ]
+    },
+    {
+      "ref": "metric:cart:error_rate",
+      "metric": "error_rate",
+      "service": "cart",
+      "baseline": 0.0,
+      "points": [
+        {
+          "timestamp": "2026-10-22T14:00:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:00:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:01:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:01:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:02:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:02:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:03:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:03:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:04:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:04:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:05:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:05:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:06:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:06:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:07:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:07:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:08:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:08:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:09:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:09:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:10:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:10:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:11:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:11:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:12:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:12:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:13:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:13:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:14:00Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:14:30Z",
+          "value": 0.0
+        },
+        {
+          "timestamp": "2026-10-22T14:15:00Z",
+          "value": 0.0
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "ref": "log:c1-0001",
+      "timestamp": "2026-10-22T14:00:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 28ms"
+    },
+    {
+      "ref": "log:c1-0002",
+      "timestamp": "2026-10-22T14:00:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 41ms"
+    },
+    {
+      "ref": "log:c1-0003",
+      "timestamp": "2026-10-22T14:00:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 28ms"
+    },
+    {
+      "ref": "log:c1-0004",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 30ms"
+    },
+    {
+      "ref": "log:c1-0005",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 55ms"
+    },
+    {
+      "ref": "log:c1-0006",
+      "timestamp": "2026-10-22T14:01:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 30ms"
+    },
+    {
+      "ref": "log:c1-0007",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 48ms"
+    },
+    {
+      "ref": "log:c1-0008",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 47ms"
+    },
+    {
+      "ref": "log:c1-0009",
+      "timestamp": "2026-10-22T14:02:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 48ms"
+    },
+    {
+      "ref": "log:c1-0010",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 14ms"
+    },
+    {
+      "ref": "log:c1-0011",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 25ms"
+    },
+    {
+      "ref": "log:c1-0012",
+      "timestamp": "2026-10-22T14:03:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 14ms"
+    },
+    {
+      "ref": "log:c1-0013",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 51ms"
+    },
+    {
+      "ref": "log:c1-0014",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 16ms"
+    },
+    {
+      "ref": "log:c1-0015",
+      "timestamp": "2026-10-22T14:04:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 51ms"
+    },
+    {
+      "ref": "log:c1-0016",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 40ms"
+    },
+    {
+      "ref": "log:c1-0017",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 26ms"
+    },
+    {
+      "ref": "log:c1-0018",
+      "timestamp": "2026-10-22T14:05:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 40ms"
+    },
+    {
+      "ref": "log:c1-0019",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 29ms"
+    },
+    {
+      "ref": "log:c1-0020",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 55ms"
+    },
+    {
+      "ref": "log:c1-0021",
+      "timestamp": "2026-10-22T14:06:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 29ms"
+    },
+    {
+      "ref": "log:c1-0046",
+      "timestamp": "2026-10-22T14:07:00Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0047",
+      "timestamp": "2026-10-22T14:07:03Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0048",
+      "timestamp": "2026-10-22T14:07:24Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0049",
+      "timestamp": "2026-10-22T14:07:27Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0022",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0023",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 21ms"
+    },
+    {
+      "ref": "log:c1-0024",
+      "timestamp": "2026-10-22T14:07:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0050",
+      "timestamp": "2026-10-22T14:07:48Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0051",
+      "timestamp": "2026-10-22T14:07:51Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0052",
+      "timestamp": "2026-10-22T14:08:12Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0053",
+      "timestamp": "2026-10-22T14:08:15Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0025",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0026",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 17ms"
+    },
+    {
+      "ref": "log:c1-0027",
+      "timestamp": "2026-10-22T14:08:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0054",
+      "timestamp": "2026-10-22T14:08:36Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0055",
+      "timestamp": "2026-10-22T14:08:39Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0056",
+      "timestamp": "2026-10-22T14:09:00Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0057",
+      "timestamp": "2026-10-22T14:09:03Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0058",
+      "timestamp": "2026-10-22T14:09:24Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0059",
+      "timestamp": "2026-10-22T14:09:27Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0028",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 57ms"
+    },
+    {
+      "ref": "log:c1-0029",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 37ms"
+    },
+    {
+      "ref": "log:c1-0030",
+      "timestamp": "2026-10-22T14:09:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 57ms"
+    },
+    {
+      "ref": "log:c1-0060",
+      "timestamp": "2026-10-22T14:09:48Z",
+      "service": "payment",
+      "severity": "error",
+      "message": "Payment request failed. Invalid token. app.loyalty.level=gold"
+    },
+    {
+      "ref": "log:c1-0061",
+      "timestamp": "2026-10-22T14:09:51Z",
+      "service": "checkout",
+      "severity": "error",
+      "message": "failed to charge card: could not charge the card: rpc error: code = Unknown desc = Payment request failed. Invalid token."
+    },
+    {
+      "ref": "log:c1-0062",
+      "timestamp": "2026-10-22T14:10:00Z",
+      "service": "frontend",
+      "severity": "warning",
+      "message": "checkout request returned 500"
+    },
+    {
+      "ref": "log:c1-0031",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 13ms"
+    },
+    {
+      "ref": "log:c1-0032",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 29ms"
+    },
+    {
+      "ref": "log:c1-0033",
+      "timestamp": "2026-10-22T14:10:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 13ms"
+    },
+    {
+      "ref": "log:c1-0034",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 15ms"
+    },
+    {
+      "ref": "log:c1-0035",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 30ms"
+    },
+    {
+      "ref": "log:c1-0036",
+      "timestamp": "2026-10-22T14:11:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 15ms"
+    },
+    {
+      "ref": "log:c1-0037",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0038",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 49ms"
+    },
+    {
+      "ref": "log:c1-0039",
+      "timestamp": "2026-10-22T14:12:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0040",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 23ms"
+    },
+    {
+      "ref": "log:c1-0041",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 12ms"
+    },
+    {
+      "ref": "log:c1-0042",
+      "timestamp": "2026-10-22T14:13:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 23ms"
+    },
+    {
+      "ref": "log:c1-0043",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "frontend",
+      "severity": "info",
+      "message": "frontend: request handled in 43ms"
+    },
+    {
+      "ref": "log:c1-0044",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "cart",
+      "severity": "info",
+      "message": "cart: request handled in 16ms"
+    },
+    {
+      "ref": "log:c1-0045",
+      "timestamp": "2026-10-22T14:14:30Z",
+      "service": "checkout",
+      "severity": "info",
+      "message": "checkout: request handled in 43ms"
+    }
+  ],
+  "traces": [
+    {
+      "ref": "trace:c1-0",
+      "trace_id": "c1a00000",
+      "spans": [
+        {
+          "service": "frontend",
+          "operation": "POST /api/checkout",
+          "duration_ms": 310.0,
+          "error": true,
+          "error_message": "500 Internal Server Error"
+        },
+        {
+          "service": "checkout",
+          "operation": "PlaceOrder",
+          "duration_ms": 280.0,
+          "error": true,
+          "error_message": "failed to charge card"
+        },
+        {
+          "service": "payment",
+          "operation": "Charge",
+          "duration_ms": 40.0,
+          "error": true,
+          "error_message": "Payment request failed. Invalid token."
+        }
+      ]
+    },
+    {
+      "ref": "trace:c1-1",
+      "trace_id": "c1a00001",
+      "spans": [
+        {
+          "service": "frontend",
+          "operation": "POST /api/checkout",
+          "duration_ms": 311.0,
+          "error": true,
+          "error_message": "500 Internal Server Error"
+        },
+        {
+          "service": "checkout",
+          "operation": "PlaceOrder",
+          "duration_ms": 281.0,
+          "error": true,
+          "error_message": "failed to charge card"
+        },
+        {
+          "service": "payment",
+          "operation": "Charge",
+          "duration_ms": 41.0,
+          "error": true,
+          "error_message": "Payment request failed. Invalid token."
+        }
+      ]
+    },
+    {
+      "ref": "trace:c1-2",
+      "trace_id": "c1a00002",
+      "spans": [
+        {
+          "service": "frontend",
+          "operation": "POST /api/checkout",
+          "duration_ms": 312.0,
+          "error": true,
+          "error_message": "500 Internal Server Error"
+        },
+        {
+          "service": "checkout",
+          "operation": "PlaceOrder",
+          "duration_ms": 282.0,
+          "error": true,
+          "error_message": "failed to charge card"
+        },
+        {
+          "service": "payment",
+          "operation": "Charge",
+          "duration_ms": 42.0,
+          "error": true,
+          "error_message": "Payment request failed. Invalid token."
+        }
+      ]
+    }
+  ]
+}
