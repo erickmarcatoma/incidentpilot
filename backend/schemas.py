@@ -1,10 +1,14 @@
-"""Shared data contracts for IncidentPilot (PRD section 3e)."""
+"""Shared data contracts for IncidentPilot (PRD section 3e).
+
+Both agents and the orchestrator import from here. Changing a field means
+bumping SCHEMA_VERSION and telling the other person the same day.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -12,7 +16,14 @@ SCHEMA_VERSION = "1.0"
 
 
 class Strict(BaseModel):
+    """Base model: unknown fields are rejected, so typos fail loudly."""
+
     model_config = ConfigDict(extra="forbid")
+
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
 
 
 class Category(str, Enum):
@@ -25,6 +36,8 @@ class Category(str, Enum):
 
 
 class DiagnosisStatus(str, Enum):
+    """Set by the orchestrator, never by an LLM."""
+
     OK = "ok"
     UNCERTAIN = "uncertain"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
@@ -44,15 +57,22 @@ class PolicyResult(str, Enum):
 
 
 class PlanStatus(str, Enum):
+    """Where a plan is in the approval queue."""
+
     PENDING = "pending"
     NEEDS_HUMAN = "needs_human"
     APPROVED = "approved"
     REJECTED = "rejected"
-    SUPERSEDED = "superseded"
-    STALE = "stale"
+    SUPERSEDED = "superseded"  # a newer plan exists for the same incident
+    STALE = "stale"  # the incident changed after the plan was made
     EXECUTED = "executed"
     RECOVERED = "recovered"
     NOT_RECOVERED = "not_recovered"
+
+
+# ---------------------------------------------------------------------------
+# Incident Packet: what the alert hands to Triage, and what tools return
+# ---------------------------------------------------------------------------
 
 
 class TimeWindow(Strict):
@@ -60,12 +80,12 @@ class TimeWindow(Strict):
     end: datetime
 
     @model_validator(mode="after")
-    def start_before_end(self) -> "TimeWindow":
+    def start_before_end(self) -> TimeWindow:
         if self.start >= self.end:
             raise ValueError("window.start must be before window.end")
         return self
 
-    def contains(self, other: "TimeWindow") -> bool:
+    def contains(self, other: TimeWindow) -> bool:
         return self.start <= other.start and other.end <= self.end
 
 
@@ -82,15 +102,15 @@ class MetricPoint(Strict):
 
 
 class MetricSeries(Strict):
-    ref: str
+    ref: str  # evidence reference id, e.g. "metric:checkout:error_rate"
     metric: str
     service: str
-    baseline: Optional[float] = None
-    points: list[MetricPoint] = []
+    baseline: float | None = None
+    points: list[MetricPoint]
 
 
 class LogEntry(Strict):
-    ref: str
+    ref: str  # evidence reference id, e.g. "log:000123"
     timestamp: datetime
     service: str
     severity: Literal["debug", "info", "warning", "error", "critical"]
@@ -102,16 +122,18 @@ class Span(Strict):
     operation: str
     duration_ms: float
     error: bool = False
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class Trace(Strict):
-    ref: str
+    ref: str  # evidence reference id, e.g. "trace:4bf92f35"
     trace_id: str
-    spans: list[Span] = []
+    spans: list[Span]
 
 
 class IncidentPacket(Strict):
+    """Everything known about one incident. Also the recorded fixture format."""
+
     schema_version: str = SCHEMA_VERSION
     incident_id: str
     alert: Alert
@@ -121,7 +143,11 @@ class IncidentPacket(Strict):
     logs: list[LogEntry] = []
     traces: list[Trace] = []
 
-    def evidence_text(self, source: EvidenceSource, ref: str) -> Optional[str]:
+    def evidence_text(self, source: EvidenceSource, ref: str) -> str | None:
+        """Return the raw text behind an evidence ref, or None if it doesn't exist.
+
+        The orchestrator uses this to check that every quote is real.
+        """
         if source is EvidenceSource.LOGS:
             for entry in self.logs:
                 if entry.ref == ref:
@@ -141,10 +167,15 @@ class IncidentPacket(Strict):
         return None
 
 
+# ---------------------------------------------------------------------------
+# Root-Cause Report: Triage -> orchestrator -> Remediation
+# ---------------------------------------------------------------------------
+
+
 class Evidence(Strict):
     source: EvidenceSource
     ref: str = Field(min_length=1)
-    quote: str = Field(min_length=1)
+    quote: str = Field(min_length=1)  # exactly as the tool returned it
 
 
 class Hypothesis(Strict):
@@ -163,6 +194,8 @@ class TimelineEvent(Strict):
 
 
 class RootCauseReport(Strict):
+    """What the Triage Agent returns. `status` is filled in by the orchestrator."""
+
     schema_version: str = SCHEMA_VERSION
     incident_id: str
     window: TimeWindow
@@ -170,9 +203,9 @@ class RootCauseReport(Strict):
     timeline: list[TimelineEvent] = []
     hypotheses: list[Hypothesis] = Field(max_length=3)
     unknowns: list[str] = []
-    status: Optional[DiagnosisStatus] = None
-    validation_notes: list[str] = []
-    created_at: Optional[datetime] = None
+    status: DiagnosisStatus | None = None
+    validation_notes: list[str] = []  # e.g. "H2 removed: evidence not found"
+    created_at: datetime | None = None
 
     @field_validator("hypotheses")
     @classmethod
@@ -186,17 +219,22 @@ class RootCauseReport(Strict):
         return hypotheses
 
     @model_validator(mode="after")
-    def require_hypothesis_unless_insufficient(self) -> "RootCauseReport":
+    def require_hypothesis_unless_insufficient(self) -> RootCauseReport:
         if not self.hypotheses and self.status is not DiagnosisStatus.INSUFFICIENT_EVIDENCE:
             raise ValueError("a report without hypotheses must be insufficient_evidence")
         return self
 
 
+# ---------------------------------------------------------------------------
+# Remediation Plan: Remediation -> approval queue -> human -> executor
+# ---------------------------------------------------------------------------
+
+
 class PlanStep(Strict):
-    action: str
-    target_service: str
+    action: str  # must match an action in allowed-actions.yaml
+    target_service: str  # exactly one service per step
     policy_result: PolicyResult
-    runbook_step: str = ""
+    runbook_step: str = ""  # the runbook line this step comes from
 
 
 class RecoveryCheck(Strict):
@@ -213,24 +251,24 @@ class RunbookRef(Strict):
 
 class RemediationPlan(Strict):
     schema_version: str = SCHEMA_VERSION
-    plan_id: Optional[str] = None
+    plan_id: str | None = None  # set by submit_remediation_plan
     incident_id: str
-    addresses_hypothesis: Optional[str] = Field(default=None, pattern=r"^H[1-3]$")
-    alternative_hypothesis: Optional[str] = Field(default=None, pattern=r"^H[1-3]$")
-    runbook: Optional[RunbookRef] = None
+    addresses_hypothesis: str | None = Field(default=None, pattern=r"^H[1-3]$")
+    alternative_hypothesis: str | None = Field(default=None, pattern=r"^H[1-3]$")
+    runbook: RunbookRef | None = None
     steps: list[PlanStep] = []
     risk: str = ""
     rollback: str = ""
-    recovery_check: Optional[RecoveryCheck] = None
+    recovery_check: RecoveryCheck | None = None
     incident_summary: str = Field(min_length=1)
-    diagnosis_status: DiagnosisStatus
+    diagnosis_status: DiagnosisStatus  # carried over from the report
     status: PlanStatus = PlanStatus.PENDING
-    reason: str = ""
-    based_on_report_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
+    reason: str = ""  # one line when status is needs_human
+    based_on_report_at: datetime | None = None  # used by the stale-plan check
+    created_at: datetime | None = None
 
     @model_validator(mode="after")
-    def consistent(self) -> "RemediationPlan":
+    def consistent(self) -> RemediationPlan:
         if any(step.policy_result is PolicyResult.REJECTED for step in self.steps):
             raise ValueError("a plan must not contain a step that policy rejected")
         if self.status is PlanStatus.NEEDS_HUMAN:
@@ -247,37 +285,7 @@ class RemediationPlan(Strict):
                 raise ValueError("a pending plan needs a runbook and a recovery check")
             if not self.rollback:
                 raise ValueError("a pending plan needs rollback steps")
-        if self.diagnosis_status in (
-            DiagnosisStatus.INSUFFICIENT_EVIDENCE,
-            DiagnosisStatus.FAILED,
-        ):
+        if self.diagnosis_status in (DiagnosisStatus.INSUFFICIENT_EVIDENCE, DiagnosisStatus.FAILED):
             if self.status is PlanStatus.PENDING:
-                raise ValueError(
-                    "a plan built on an insufficient or failed diagnosis must be needs_human"
-                )
+                raise ValueError("a plan built on an insufficient or failed diagnosis must be needs_human")
         return self
-
-
-__all__ = [
-    "Alert",
-    "Category",
-    "DiagnosisStatus",
-    "Evidence",
-    "EvidenceSource",
-    "Hypothesis",
-    "IncidentPacket",
-    "LogEntry",
-    "MetricPoint",
-    "MetricSeries",
-    "PlanStatus",
-    "PlanStep",
-    "PolicyResult",
-    "RecoveryCheck",
-    "RootCauseReport",
-    "RunbookRef",
-    "Span",
-    "Strict",
-    "TimeWindow",
-    "Trace",
-    "RemediationPlan",
-]

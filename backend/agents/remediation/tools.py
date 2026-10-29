@@ -11,8 +11,8 @@ import yaml
 
 from backend.schemas import PolicyResult, RunbookRef
 
-_RUNBOOKS_DIR = Path(__file__).resolve().parents[2] / "knowledge" / "runbooks"
-_POLICIES_FILE = Path(__file__).resolve().parents[2] / "knowledge" / "policies" / "allowed-actions.yaml"
+_RUNBOOKS_DIR = Path(__file__).resolve().parents[3] / "knowledge" / "runbooks"
+_POLICIES_FILE = Path(__file__).resolve().parents[3] / "knowledge" / "policies" / "allowed-actions.yaml"
 _DB_PATH = Path(__file__).resolve().parents[3] / "approvals.db"
 
 

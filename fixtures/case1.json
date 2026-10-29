@@ -1,0 +1,14 @@
+{
+  "incident_id": "case-001",
+  "status": "failed",
+  "hypotheses": [
+    {
+      "id": "H1",
+      "description": "Payment service charge span failing due to invalid authentication token",
+      "confidence": 0.95,
+      "category": "service_failure",
+      "service": "payment",
+      "evidence_refs": ["trace:payment-charge-failure", "log:payment-invalid-token"]
+    }
+  ]
+}

@@ -19,26 +19,24 @@
 - **Branches:** `triage-agent`, `remediation-agent` and `frontend`. Nobody pushes straight to `main`.  
 - **Pull requests:** the other person reviews and merges. Tests must pass.  
 - **Contracts first:** `schemas.py` and the API are agreed together. Whoever changes them tells the other person the same day.  
-- **Fixtures first:** both agents run on the recorded incidents in `fixtures/` before touching the live stack, so neither of us blocks the other.  
+- **Fixtures only:** both agents run on the 3 hand-built incidents in `fixtures/`, served by `mock_server/`. We do not run the OpenTelemetry Demo.  
 - **Daily check-in (10 min, start of class):** what I finished, what I'm doing today, and what's blocking me.  
 - **Frontend pairing:** one person drives and the other reviews, swapping every 45 minutes.
 
 ## Schedule
 
-### Wed Oct 21: contracts
+### Thu Oct 22: contrast & tools
 
-- [ ] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints  
+- [x] **Together:** lock `schemas.py` (IncidentPacket, RootCauseReport, RemediationPlan) and the API endpoints
 - [ ] **Together:** repo skeleton, branches, README  
-- [ ] **Erick:** start the OpenTelemetry Demo locally; draft the Triage prompt v0  
+- [x] ~~**Erick:** start the OpenTelemetry Demo locally~~ Replaced by the mock telemetry server and hand-built fixtures (the demo needs more memory than our laptops have)
+- [x] **Erick:** draft the Triage prompt v0
 - [ ] **Kamal:** write 2 runbooks (payment failure, memory leak) and `allowed-actions.yaml`
-
-### Thu Oct 22: tools
-
-- [ ] **Erick:** `get_metrics`, `search_logs` and `get_traces` in fixture mode  
-- [ ] **Erick:** record 3 incident packets into `fixtures/`  
+- [x] **Erick:** `get_metrics`, `search_logs` and `get_traces` in fixture mode
+- [x] **Erick:** record 3 incident packets into `fixtures/`
 - [ ] **Kamal:** `find_runbook`, `check_policy` and `submit_remediation_plan` (SQLite)  
 - [ ] **Kamal:** hand-write a valid sample RootCauseReport for case 1  
-- [ ] **Together:** orchestrator validator (structure, consistency, evidence, status) \+ unit tests
+- [x] **Together:** orchestrator validator (structure, consistency, evidence, status) \+ unit tests
 
 ### Fri–Sun Oct 23–25: optional
 
@@ -47,9 +45,50 @@
 
 ### Mon Oct 26: agents work alone
 
-- [ ] **Erick:** Triage agent returns a valid report for case 1  
-- [ ] **Kamal:** Remediation agent returns a valid plan from the sample report  
-- [ ] **Together:** FastAPI endpoints \+ frontend scaffold
+- [x] **Erick:** Triage agent returns a valid report for case 1
+- [x] **Kamal:** Remediation agent returns a valid plan from the sample report  
+
+**Remediation Plan for Case 1 (Payment Service Failure):**
+```json
+{
+  "schema_version": "1.0",
+  "incident_id": "case-001",
+  "addresses_hypothesis": "H1",
+  "runbook": {
+    "file": "/knowledge/runbooks/payment-service-failure.md",
+    "section": "Payment Service Failure"
+  },
+  "steps": [
+    {
+      "action": "toggle_feature_flag",
+      "target_service": "payment",
+      "policy_result": "requires_approval",
+      "runbook_step": "Step 1: Disable failing change for payment service"
+    },
+    {
+      "action": "restart_service",
+      "target_service": "payment",
+      "policy_result": "requires_approval",
+      "runbook_step": "Step 2: Restart payment service"
+    }
+  ],
+  "risk": "High - payment processing outage",
+  "rollback": "Re-enable any disabled feature flags and restore previous payment service configuration",
+  "recovery_check": {
+    "metric": "error_rate",
+    "service": "checkout",
+    "threshold": 0.05,
+    "within_minutes": 5
+  },
+  "incident_summary": "Payment service failure causing checkout error rate above 20% with invalid token errors and failed Charge spans",
+  "diagnosis_status": "failed",
+  "status": "pending",
+  "reason": "",
+  "based_on_report_at": "2026-10-22T14:33:00Z",
+  "created_at": "2026-10-22T14:38:45Z"
+}
+```
+- [x] **Together:** FastAPI endpoints \+ frontend scaffold
 
 ### Tue Oct 27: join everything (gate)
 
@@ -67,7 +106,7 @@
 ### Thu Oct 29: deliver
 
 - [ ] **Together:** rerun the evals 3 times and record results against the targets  
-- [ ] **Together:** rehearse the demo twice, then present
+- [ ] **Together:** rehearse the demo twice
 
 ## Definition of done
 
@@ -91,7 +130,6 @@ If the Tuesday gate slips, cut in this order:
 
 | Risk | Early sign | Fallback |
 | :---- | :---- | :---- |
-| OTel Demo won't run on our laptops | Not up by end of Thu 22 | Demo from fixtures only |
+| OTel Demo won't run on our laptops | Happened: 8 GB RAM is not enough | Done: hand-built fixtures + mock telemetry server |
 | Agents disagree on the schema | Validator fails on real output Mon 26 | Fix `schemas.py` together that day |
 | LLM output varies between runs | Eval results differ across runs | Tighten prompts; report the pass rate honestly |
-
