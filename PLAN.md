@@ -8,7 +8,7 @@
 
 - **Triage side: done.** Triage Agent, orchestrator, handoff filter, evals (5/5 corrupted reports caught), API and approval screen are on `develop`.
 - **Remediation side: blocked.** Runbooks, policy, tools and a basic executor are on `remediation-agent`, not merged. The Remediation Agent (`agent.py`) is empty; last push Oct 24.
-- **Gate not passed:** no plans reach the approval screen yet.
+- **Gate passed (Oct 29):** Triage -> handoff filter -> rule-based planner -> approval queue. The planner uses Kamal's `find_runbook` and `check_policy`; his LLM Remediation Agent can replace it in `main.py` once it runs.
 - **Decision at 5 pm today:** if the Remediation Agent isn't pushed, build the rule-based fallback planner so plans work before the code deadline.
 
 ## Who owns what
@@ -61,7 +61,7 @@
 - [x] **Erick:** Triage on cases 2 and 3; one retry; 90-second timeout  
 - [ ] **Kamal:** executor (allow-list, one service), recovery check, stale-plan check before running (partly: allow-list and one service done; recovery and stale checks are placeholders)  
 - [x] **Together:** approval screen: queue, plan detail, approve / reject  
-- [ ] **Gate:** case 1 goes from alert to a plan on the approval screen (blocked: no plans yet)
+- [x] **Gate:** case 1 goes from alert to a plan on the approval screen (rule-based planner on Kamal's runbooks, policy and tools; Oct 29)
 
 ### Wed Oct 28: evals \+ freeze
 

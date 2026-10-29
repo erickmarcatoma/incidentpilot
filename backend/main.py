@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import Literal
 
 from anthropic import APIError
@@ -17,6 +19,8 @@ from backend.agents.triage.agent import (
     run_triage,
 )
 from backend.agents.triage.tools import list_incident_packets, load_incident_packet
+from backend.handoff import HandoffError, build_remediation_input
+from backend.remediation_planner import plan_remediation
 from backend.schemas import IncidentPacket, PlanStatus, RemediationPlan, RootCauseReport
 
 
@@ -76,10 +80,30 @@ def incident(incident_id: str) -> IncidentPacket:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+logger = logging.getLogger(__name__)
+
+
+def _plan_for(packet: IncidentPacket, report: RootCauseReport) -> RemediationPlan | None:
+    """Triage -> filtered handoff -> planner -> approval queue. Never runs any action."""
+    try:
+        handoff = build_remediation_input(packet, report)
+    except HandoffError:
+        logger.exception("Report could not be handed to Remediation")
+        return None
+    plan = plan_remediation(handoff, packet)
+    if plan is None:
+        return None
+    db.supersede_pending(plan.incident_id)
+    return db.insert_plan(plan)
+
+
 @app.post("/api/incidents", response_model=IncidentResponse)
 def create_incident_report(packet: IncidentPacket) -> IncidentResponse:
     try:
-        return IncidentResponse(report=run_triage(packet))
+        report = run_triage(packet)
+        if report.created_at is None:
+            report = report.model_copy(update={"created_at": datetime.now(timezone.utc)})
+        return IncidentResponse(report=report, plan=_plan_for(packet, report))
     except TriageConfigurationError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except TriageAgentError as exc:
