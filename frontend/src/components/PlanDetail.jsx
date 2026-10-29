@@ -53,7 +53,7 @@ export default function PlanDetail({ plan, busy, onApprove, onReject, hasDiagnos
         <span className={`chip chip-status-${plan.status}`}>{label(plan.status)}</span>
       </div>
 
-      {plan.diagnosis_status === "uncertain" && (
+      {plan.diagnosis_status === "uncertain" && plan.addresses_hypothesis && (
         <p className="pill-line warn">
           Uncertain diagnosis: plans for {plan.addresses_hypothesis}
           {plan.alternative_hypothesis ? `, alternative ${plan.alternative_hypothesis}` : ""}

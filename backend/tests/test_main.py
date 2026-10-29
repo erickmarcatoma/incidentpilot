@@ -105,8 +105,25 @@ def test_incident_submission_returns_agent_report(monkeypatch, tmp_path):
         response = client.post("/api/incidents", json=packet.model_dump(mode="json"))
 
     assert response.status_code == 200
-    assert response.json()["report"]["incident_id"] == packet.incident_id
-    assert response.json()["plan"] is None
+    body = response.json()
+    assert body["report"]["incident_id"] == packet.incident_id
+    plan = body["plan"]
+    assert plan["status"] == "pending"
+    assert [(s["action"], s["target_service"]) for s in plan["steps"]] == [("toggle_feature_flag", "payment")]
+    assert plan["plan_id"]
+
+
+def test_new_triage_supersedes_the_older_pending_plan(monkeypatch, tmp_path):
+    monkeypatch.setenv("INCIDENTPILOT_DB_PATH", str(tmp_path / "approvals.sqlite3"))
+    packet = load_incident_packet("inc-case1-payment")
+    monkeypatch.setattr("backend.main.run_triage", lambda received_packet: case1_report())
+    with TestClient(app) as client:
+        first = client.post("/api/incidents", json=packet.model_dump(mode="json")).json()["plan"]
+        second = client.post("/api/incidents", json=packet.model_dump(mode="json")).json()["plan"]
+        queue = {p["plan_id"]: p["status"] for p in client.get("/api/approvals").json()}
+
+    assert queue[first["plan_id"]] == "superseded"
+    assert queue[second["plan_id"]] == "pending"
 
 
 def test_approval_queue_records_decisions_without_execution(monkeypatch, tmp_path):

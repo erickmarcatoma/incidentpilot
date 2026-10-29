@@ -47,7 +47,11 @@ function stepStates({ busy, report, plan }) {
     approve: decided ? "done" : plan ? "active" : "todo",
   };
   const tones = { validate: diagnosis ? STATUS_TONE[diagnosis] : null };
-  if (plan?.status === "needs_human") tones.plan = "warn";
+  if (plan?.status === "needs_human") {
+    // Nothing to approve: a person reviews the incident by hand instead.
+    tones.plan = "warn";
+    states.approve = "todo";
+  }
   if (plan?.status === "rejected") tones.approve = "danger";
   return { states, tones, diagnosis };
 }
@@ -71,9 +75,11 @@ export default function PipelineTracker({ busy, report, plan }) {
                   ? STATUS_TEXT[diagnosis] || diagnosis
                   : step.key === "plan" && plan?.status === "needs_human"
                     ? "Needs a human"
-                    : step.key === "approve" && plan && states.approve === "done"
-                      ? PLAN_TEXT[plan.status] || plan.status
-                      : step.hint}
+                    : step.key === "approve" && plan?.status === "needs_human"
+                      ? "Manual review"
+                      : step.key === "approve" && plan && states.approve === "done"
+                        ? PLAN_TEXT[plan.status] || plan.status
+                        : step.hint}
               </small>
             </span>
             {index < STEPS.length - 1 && <span className="pipe-line" aria-hidden="true" />}

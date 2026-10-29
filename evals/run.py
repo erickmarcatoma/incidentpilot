@@ -81,6 +81,9 @@ class RunResult:
     hypotheses_kept: int = 0
     hypotheses_dropped: int = 0
     expected_path: bool = False
+    plan_status: str | None = None
+    plan_problems: list[str] = field(default_factory=list)
+    full_flow: bool = False
     problems: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     error: str | None = None
@@ -152,8 +155,25 @@ def run_case(case_key: str, run_number: int, client: Any) -> RunResult:
     result.true_cause_rank = _true_cause_rank(report, spec)
     result.problems = _check_expected_path(report, spec, result)
     result.problems += _check_handoff(packet, report, spec)
+    _score_plan(case_key, packet, report, result)
     result.expected_path = not result.problems
+    result.full_flow = result.expected_path and not result.plan_problems
     return result
+
+
+def _score_plan(case_key: str, packet: IncidentPacket, report: RootCauseReport, result: "RunResult") -> None:
+    """Remediation stage: filtered handoff -> planner -> rubric from evals/reference/."""
+    from backend.handoff import HandoffError, build_remediation_input
+    from backend.remediation_planner import plan_remediation
+    from evals.rubric import load_rubric, score_plan
+
+    try:
+        plan = plan_remediation(build_remediation_input(packet, report), packet)
+    except HandoffError as exc:
+        plan, result.plan_problems = None, [f"handoff refused: {exc}"]
+    if plan is not None or not result.plan_problems:
+        result.plan_problems = score_plan(plan, load_rubric(case_key))
+    result.plan_status = plan.status.value if plan else None
 
 
 def _check_handoff(packet: IncidentPacket, report: RootCauseReport, spec: dict[str, Any]) -> list[str]:
@@ -295,6 +315,8 @@ def score(results: list[RunResult]) -> dict[str, Any]:
         "handoff_after_retry": pct(sum(r.handoff == "after_retry" for r in results), len(results)),
         "handoff_failed": pct(sum(r.handoff == "failed" for r in results), len(results)),
         "end_to_end_triage_stage": pct(sum(r.expected_path for r in results), len(results)),
+        "remediation_rubric": pct(sum(not r.plan_problems for r in results), len(results)),
+        "end_to_end_full_flow": pct(sum(r.full_flow for r in results), len(results)),
         "median_triage_seconds": statistics.median(r.seconds for r in results) if results else None,
     }
 
@@ -308,6 +330,9 @@ def print_report(results: list[RunResult], scores: dict[str, Any] | None, corrup
                   f"{(r.h1 or '-')[:46]:<48}{'PASS' if r.expected_path else 'FAIL'}")
             for problem in r.problems:
                 print(f"{'':<12}- {problem}")
+            print(f"{'':<12}plan: {r.plan_status or '-'} {'PASS' if not r.plan_problems else 'FAIL'}")
+            for problem in r.plan_problems:
+                print(f"{'':<14}- {problem}")
             for note in dict.fromkeys(r.notes):
                 print(f"{'':<12}  note: {note}")
             if r.error:
@@ -323,7 +348,9 @@ def print_report(results: list[RunResult], scores: dict[str, Any] | None, corrup
             ("   Handoff: passed after retry", scores["handoff_after_retry"], ""),
             ("   Handoff: failed", scores["handoff_failed"], "0%"),
             ("3. End-to-end (triage stage)", scores["end_to_end_triage_stage"], "all cases"),
-            ("   End-to-end (full flow)", "needs Remediation Agent", ">= 80% recover"),
+            ("   Remediation: plan matches rubric", scores["remediation_rubric"], "rule-based baseline"),
+            ("   End-to-end (alert to plan)", scores["end_to_end_full_flow"], "all cases"),
+            ("   Recovery after approval", "needs executor checks", ">= 80% recover"),
             ("   Median triage time (s)", scores["median_triage_seconds"], "< 120 incl. plan"),
         ]
         for label, value, target in lines:
@@ -370,7 +397,7 @@ def main(argv: list[str] | None = None, client: Any = None) -> int:
     }, indent=2))
     print(f"\nSaved {out.relative_to(RESULTS_DIR.parent.parent)}")
 
-    all_passed = all(r["passed"] for r in corrupted) and all(r.expected_path for r in results)
+    all_passed = all(r["passed"] for r in corrupted) and all(r.full_flow for r in results)
     return 0 if all_passed else 1
 
 

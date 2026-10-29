@@ -128,3 +128,23 @@ def update_plan_status(
             ).fetchone()
             return RemediationPlan.model_validate_json(row[0]) if row else None
     return updated
+
+def supersede_pending(incident_id: str, path: Path | None = None) -> int:
+    """Mark older pending plans for an incident as superseded (one active plan per incident)."""
+    resolved_path = path or database_path()
+    initialize_database(resolved_path)
+    changed = 0
+    with sqlite3.connect(resolved_path) as connection:
+        rows = connection.execute(
+            "SELECT plan_id, plan_json FROM approvals WHERE incident_id = ? AND status IN (?, ?)",
+            (incident_id, PlanStatus.PENDING.value, PlanStatus.NEEDS_HUMAN.value),
+        ).fetchall()
+        for plan_id, plan_json in rows:
+            plan = RemediationPlan.model_validate_json(plan_json)
+            updated = plan.model_copy(update={"status": PlanStatus.SUPERSEDED})
+            connection.execute(
+                "UPDATE approvals SET status = ?, plan_json = ? WHERE plan_id = ?",
+                (PlanStatus.SUPERSEDED.value, updated.model_dump_json(), plan_id),
+            )
+            changed += 1
+    return changed
