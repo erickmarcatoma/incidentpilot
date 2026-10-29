@@ -120,15 +120,7 @@ def validate_report(
             if status is DiagnosisStatus.OK:
                 status = DiagnosisStatus.UNCERTAIN
 
-    missing = [
-        name
-        for name, data in (
-            ("metrics", packet.metrics),
-            ("logs", packet.logs),
-            ("traces", packet.traces),
-        )
-        if not data
-    ]
+    missing = packet.missing_sources()
     if missing:
         notes.append(f"Diagnosis incomplete: {', '.join(missing)} unavailable")
         if status is DiagnosisStatus.OK:

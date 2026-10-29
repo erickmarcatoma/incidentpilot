@@ -121,3 +121,58 @@ def test_rubric_catches_unsafe_plans():
     no_rollback = RemediationPlan.model_validate({**json.loads(good.model_dump_json()), "status": "needs_human", "steps": [], "reason": "x", "rollback": ""})
     assert score_plan(no_rollback, rubric)
     assert score_plan(None, rubric) == ["no plan was produced"]
+
+
+# --- Red-team fixes -----------------------------------------------------------
+
+def test_c1_no_plan_for_a_service_the_evidence_does_not_implicate():
+    packet = load_incident_packet("inc-case1-payment")
+    checkout = _log(packet, "checkout", "Invalid token")
+    report = case1_report(packet)
+    report["hypotheses"][0]["evidence"] = [{"source": "logs", "ref": checkout.ref, "quote": "Payment request failed. Invalid token."}]
+    report["affected_services"] = packet.services
+    validated = validate_report(packet, report)
+
+    plan = plan_remediation(build_remediation_input(packet, validated), packet)
+
+    assert plan.status is PlanStatus.NEEDS_HUMAN
+    assert plan.steps == []
+    assert "none of its evidence comes from payment" in plan.reason
+
+
+def test_a3_metric_series_without_points_count_as_missing():
+    packet = load_incident_packet("inc-case1-payment")
+    empty = packet.model_copy(update={"metrics": [s.model_copy(update={"points": []}) for s in packet.metrics]})
+    validated = validate_report(empty, case1_report(empty))
+    handoff = build_remediation_input(empty, validated)
+
+    assert validated.status.value == "uncertain"
+    assert any("metrics unavailable" in note for note in validated.validation_notes)
+    assert handoff.telemetry_complete is False
+    assert plan_remediation(handoff, empty).status is PlanStatus.NEEDS_HUMAN
+
+
+def test_a3_points_outside_the_window_count_as_missing():
+    from datetime import timedelta
+    packet = load_incident_packet("inc-case1-payment")
+    old = packet.model_copy(update={"metrics": [
+        s.model_copy(update={"points": [p.model_copy(update={"timestamp": p.timestamp - timedelta(days=1)}) for p in s.points]})
+        for s in packet.metrics
+    ]})
+    assert "metrics" in old.missing_sources()
+
+
+def test_b1_new_diagnosis_makes_an_approved_plan_stale(monkeypatch, tmp_path):
+    from backend import db
+    monkeypatch.setenv("INCIDENTPILOT_DB_PATH", str(tmp_path / "q.sqlite3"))
+    first = db.insert_plan(plan_for("case1"))
+    db.update_plan_status(first.plan_id, PlanStatus.APPROVED)
+
+    db.supersede_pending(first.incident_id)
+    second = db.insert_plan(plan_for("case1"))
+
+    statuses = {p.plan_id: p.status for p in db.list_plans()}
+    assert statuses[first.plan_id] is PlanStatus.STALE
+    assert statuses[second.plan_id] is PlanStatus.PENDING
+    # a stale plan can't be approved again
+    assert db.update_plan_status(first.plan_id, PlanStatus.APPROVED).status is PlanStatus.STALE

@@ -129,22 +129,35 @@ def update_plan_status(
             return RemediationPlan.model_validate_json(row[0]) if row else None
     return updated
 
+# When a newer diagnosis arrives for an incident, older plans can no longer be trusted:
+# undecided plans are superseded, and approved-but-not-run plans become stale, so the
+# executor (which only runs `approved`) can never run a plan made for an older diagnosis.
+# Red-team finding B1: an approved plan used to survive next to the new pending one.
+RETIRE_ON_NEW_DIAGNOSIS = {
+    PlanStatus.PENDING: PlanStatus.SUPERSEDED,
+    PlanStatus.NEEDS_HUMAN: PlanStatus.SUPERSEDED,
+    PlanStatus.APPROVED: PlanStatus.STALE,
+}
+
+
 def supersede_pending(incident_id: str, path: Path | None = None) -> int:
-    """Mark older pending plans for an incident as superseded (one active plan per incident)."""
+    """Retire older plans for an incident so only the newest one is active."""
     resolved_path = path or database_path()
     initialize_database(resolved_path)
     changed = 0
     with sqlite3.connect(resolved_path) as connection:
+        placeholders = ", ".join("?" for _ in RETIRE_ON_NEW_DIAGNOSIS)
         rows = connection.execute(
-            "SELECT plan_id, plan_json FROM approvals WHERE incident_id = ? AND status IN (?, ?)",
-            (incident_id, PlanStatus.PENDING.value, PlanStatus.NEEDS_HUMAN.value),
+            f"SELECT plan_id, plan_json FROM approvals WHERE incident_id = ? AND status IN ({placeholders})",
+            (incident_id, *(status.value for status in RETIRE_ON_NEW_DIAGNOSIS)),
         ).fetchall()
         for plan_id, plan_json in rows:
             plan = RemediationPlan.model_validate_json(plan_json)
-            updated = plan.model_copy(update={"status": PlanStatus.SUPERSEDED})
+            new_status = RETIRE_ON_NEW_DIAGNOSIS[plan.status]
+            updated = plan.model_copy(update={"status": new_status})
             connection.execute(
                 "UPDATE approvals SET status = ?, plan_json = ? WHERE plan_id = ?",
-                (PlanStatus.SUPERSEDED.value, updated.model_dump_json(), plan_id),
+                (new_status.value, updated.model_dump_json(), plan_id),
             )
             changed += 1
     return changed

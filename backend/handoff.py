@@ -34,6 +34,7 @@ class RemediationInput(_Strict):
     incident_id: str = Field(pattern=r"^[a-z0-9-]{1,64}$")
     diagnosis_status: DiagnosisStatus
     telemetry_complete: bool  # set by code from the packet, never from text
+    h1_evidence_matches_service: bool = False  # set by code: H1 has evidence from the service it blames
     hypotheses: list[HandoffHypothesis] = Field(max_length=3)
     report_created_at: datetime | None = None
 
@@ -67,13 +68,21 @@ def build_remediation_input(packet: IncidentPacket, report: RootCauseReport) -> 
     return RemediationInput(
         incident_id=report.incident_id,
         diagnosis_status=report.status,
-        telemetry_complete=bool(packet.metrics and packet.logs and packet.traces),
+        telemetry_complete=not packet.missing_sources(),
+        h1_evidence_matches_service=_h1_evidence_matches_service(packet, report),
         hypotheses=[
             HandoffHypothesis(id=h.id, category=h.category, service=h.service, confidence=h.confidence)
             for h in report.hypotheses
         ],
         report_created_at=report.created_at,
     )
+
+
+def _h1_evidence_matches_service(packet: IncidentPacket, report: RootCauseReport) -> bool:
+    if not report.hypotheses:
+        return False
+    h1 = report.hypotheses[0]
+    return any(h1.service in packet.evidence_services(e.source, e.ref) for e in h1.evidence)
 
 
 def payload_leaks(payload_json: str, forbidden: list[str]) -> list[str]:
